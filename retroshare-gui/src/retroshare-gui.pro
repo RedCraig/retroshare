@@ -43,13 +43,13 @@ RCC_DIR = temp/qrc
 UI_DIR  = temp/ui
 MOC_DIR = temp/moc
 
-#CONFIG += debug
+CONFIG += debug
 debug {
 	QMAKE_CFLAGS += -g
 	QMAKE_CXXFLAGS -= -O2
-	QMAKE_CXXFLAGS += -O0
+	QMAKE_CXXFLAGS += -g -O0
 	QMAKE_CFLAGS -= -O2
-	QMAKE_CFLAGS += -O0
+	QMAKE_CFLAGS +=  -O0
 }
 
 INCLUDEPATH *= retroshare-gui
