@@ -39,7 +39,7 @@ linux-g++-64 {
 
 #################### Cross compilation for windows under Linux ####################
 
-win32-x-g++ {	
+win32-x-g++ {
 	OBJECTS_DIR = temp/win32xgcc/obj
 	DESTDIR = lib.win32xgcc
 	# These have been replaced by _WIN32 && __MINGW32__
@@ -159,5 +159,6 @@ SOURCES += \
 	bitdht/bdquerymgr.cc	\
 	util/bdbloom.cc		\
 	bitdht/bdfriendlist.cc	\
+	auth/auth.cc \
 
 
