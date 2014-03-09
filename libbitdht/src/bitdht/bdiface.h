@@ -38,7 +38,7 @@
  * Functions and Classes required for Interfacing with the BitDht.
  * This should be the sole header file required to talk to Dht.
  * ... though setting it up will require including udpbitdht.h as well.
- * 
+ *
  */
 
 #define BITDHT_KEY_LEN 20
@@ -141,7 +141,7 @@ virtual void bdPrintNodeId(std::ostream &out, const bdNodeId *a) = 0;
  * BITDHT_PEER_STATUS_DHT_ENGINE  (dbXXxx)
  * BITDHT_PEER_STATUS_DHT_APPL    (XXRSxx)
  * BITDHT_PEER_STATUS_DHT_VERSION (XXxx50)
- * 
+ *
  */
 
 #define 	BITDHT_PEER_STATUS_MASK_RECVD		0x000000ff
@@ -163,7 +163,7 @@ virtual void bdPrintNodeId(std::ostream &out, const bdNodeId *a) = 0;
 #define 	BITDHT_PEER_STATUS_DHT_FOF		0x00020000
 #define 	BITDHT_PEER_STATUS_DHT_FRIEND		0x00040000
 #define 	BITDHT_PEER_STATUS_DHT_RELAY_SERVER	0x00080000	// (Flag must be enabled)
-#define 	BITDHT_PEER_STATUS_DHT_SELF		0x00100000	
+#define 	BITDHT_PEER_STATUS_DHT_SELF		0x00100000
 
 
 // EXTRA FLAGS are our internal thoughts about the peer.
@@ -237,10 +237,13 @@ virtual void bdPrintNodeId(std::ostream &out, const bdNodeId *a) = 0;
 
 
 
-/* Definitions of bdSpace Peer and Bucket are publically available, 
+/* Definitions of bdSpace Peer and Bucket are publically available,
  * so we can expose the bucket entries for the gui.
  */
 
+// bdPeer, used by DHT to track peers in the bucket
+// These have last send/recv times, which are used to mark peers as good/bad/unresponsive etc.
+// I had thought that send/recv times etc, were used to remember NODES in the DHT
 class bdPeer
 {
 	public:
@@ -254,16 +257,19 @@ class bdPeer
 
 	uint32_t mExtraFlags;
 };
-	
+
+// List of peers in the bucket
+// I had thought that in the bucket it was fileHashes with [(ip:port),]
 class bdBucket
 {
 	public:
-	
+
 	bdBucket();
 	/* list so we can queue properly */
 	std::list<bdPeer> entries;
 };
 
+// list of bdIds (nodeID and socket_addr) returned by a query
 class bdQueryStatus
 {
         public:
@@ -272,6 +278,7 @@ class bdQueryStatus
         std::list<bdId> mResults;
 };
 
+// list of currently active queries
 class bdQuerySummary
 {
         public:
@@ -335,22 +342,22 @@ class bdQuerySummary
 class BitDhtCallback
 {
 	public:
-//        ~BitDhtCallback();
+        //~BitDhtCallback();
 
-		// dummy cos not needed for standard dht behaviour;
-virtual int dhtNodeCallback(const bdId *  /*id*/, uint32_t /*peerflags*/)  { return 0; } 
+	// dummy cos not needed for standard dht behaviour;
+        virtual int dhtNodeCallback(const bdId *  /*id*/, uint32_t /*peerflags*/)  { return 0; }
 
-		// must be implemented.
-virtual int dhtPeerCallback(const bdId *id, uint32_t status) = 0;
-virtual int dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status) = 0;
+        // must be implemented.
+        virtual int dhtPeerCallback(const bdId *id, uint32_t status) = 0;
+        virtual int dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status) = 0;
 
-		// connection callback. Not required for basic behaviour, but forced for initial development.
-virtual int dhtConnectCallback(const bdId *srcId, const bdId *proxyId, const bdId *destId, 
-			uint32_t mode, uint32_t point, uint32_t param, uint32_t cbtype, uint32_t errcode) = 0; /*  { return 0; }  */
+        // connection callback. Not required for basic behaviour, but forced for initial development.
+        virtual int dhtConnectCallback(const bdId *srcId, const bdId *proxyId, const bdId *destId,
+                                       uint32_t mode, uint32_t point, uint32_t param,
+                                       uint32_t cbtype, uint32_t errcode) = 0; /*  { return 0; }  */
 
-		// Generic Info callback - initially will be used to provide bad peers.	
-virtual int dhtInfoCallback(const bdId *id, uint32_t type, uint32_t flags, std::string info) = 0;
-
+        // Generic Info callback - initially will be used to provide bad peers.
+        virtual int dhtInfoCallback(const bdId *id, uint32_t type, uint32_t flags, std::string info) = 0;
 };
 
 
@@ -371,7 +378,7 @@ virtual void findDhtValue(bdNodeId *id, std::string key, uint32_t mode) = 0;
 
 	/***** Connections Requests *****/
 virtual bool ConnectionRequest(struct sockaddr_in *laddr, bdNodeId *target, uint32_t mode, uint32_t delay, uint32_t start) = 0;
-virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc, 
+virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc,
 						uint32_t bandwidth, uint32_t delay, uint32_t answer) = 0;
 virtual void ConnectionOptions(uint32_t allowedModes, uint32_t flags) = 0;
 

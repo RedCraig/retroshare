@@ -1,6 +1,8 @@
 #ifndef BITDHT_HASH_SPACE_H
 #define BITDHT_HASH_SPACE_H
 
+// CRAIG: does not appear to be used
+
 /*
  * bitdht/bdhash.h
  *

@@ -47,6 +47,10 @@
 #include "lang/languagesupport.h"
 #include "util/RsGxsUpdateBroadcast.h"
 
+#include "../../libbitdht/src/auth/auth.h"
+// craig's # defines
+#define DEBUG_BITDHT
+
 #if QT_VERSION >= QT_VERSION_CHECK (5, 0, 0)
 #ifdef WINDOWS_SYS
 #include <QFileDialog>
@@ -120,6 +124,9 @@ QString filedialog_existing_directory_hook(QWidget *parent, const QString &capti
 
 int main(int argc, char *argv[])
 { 
+	auth();
+	printf("auth compelte\n");
+
 #ifdef WINDOWS_SYS
 	// The current directory of the application is changed when using the native dialog on Windows
 	// This is a quick fix until libretroshare is using a absolute path in the portable Version
