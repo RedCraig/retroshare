@@ -55,7 +55,7 @@ class bdFilter;
  *
 
 The node handles the i/o traffic from peers.
-It 
+It
 
 
 
@@ -103,7 +103,7 @@ class bdNodePublisher
 	/* simplified outgoing msg functions (for the managers) */
 	virtual void send_ping(bdId *id) = 0; /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId) = 0; /* message out */
-	virtual void send_connect_msg(bdId *id, int msgtype, 
+	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status) = 0;
 
         // internal Callback -> normally continues to callbackConnect().
@@ -117,8 +117,8 @@ class bdNode: public bdNodePublisher
 {
 	public:
 
-	bdNode(bdNodeId *id, std::string dhtVersion, std::string bootfile, 
-		bdDhtFunctions *fns);	
+	bdNode(bdNodeId *id, std::string dhtVersion, std::string bootfile,
+		bdDhtFunctions *fns);
 
 	void init(); /* sets up the self referential classes (mQueryMgr & mConnMgr) */
 
@@ -147,7 +147,7 @@ class bdNode: public bdNodePublisher
 	/* simplified outgoing msg functions (for the managers) */
 	virtual void send_ping(bdId *id); /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId); /* message out */
-	virtual void send_connect_msg(bdId *id, int msgtype, 
+	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 
 // This is implemented in bdManager.
@@ -170,46 +170,60 @@ void	sendPkt(char *msg, int len, struct sockaddr_in addr);
 void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 
-	/* output functions (send msg) */
-	void msgout_ping(bdId *id, bdToken *transId);
-	void msgout_pong(bdId *id, bdToken *transId);
+	// fine_node
+	// peer1.msgout_find_node -> peer2.msgin_find_node
+	// peer2.msgout_reply_find_node -> peer1.msgin_reply_find_node
 	void msgout_find_node(bdId *id, bdToken *transId, bdNodeId *query);
-	void msgout_reply_find_node(bdId *id, bdToken *transId, 
-						std::list<bdId> &peers);
-	void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
-	void msgout_reply_hash(bdId *id, bdToken *transId, 
-				bdToken *token, std::list<std::string> &values);
-	void msgout_reply_nearest(bdId *id, bdToken *transId, 
-				bdToken *token, std::list<bdId> &peers);
-
-	void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash, 
-				uint32_t port, bdToken *token);
-	void msgout_reply_post(bdId *id, bdToken *transId);
-
-
-	/* input functions (once mesg is parsed) */
-	void msgin_ping(bdId *id, bdToken *token);
-	void msgin_pong(bdId *id, bdToken *transId, bdToken *versionId);
-
 	void msgin_find_node(bdId *id, bdToken *transId, bdNodeId *query);
-	void msgin_reply_find_node(bdId *id, bdToken *transId, 
-						std::list<bdId> &entries);
+	void msgout_reply_find_node(bdId *id, bdToken *transId,
+								std::list<bdId> &peers);
+	void msgin_reply_find_node(bdId *id, bdToken *transId,
+							   std::list<bdId> &entries);
 
+	// PING
+	void msgin_ping(bdId *id, bdToken *token);
+	void msgout_ping(bdId *id, bdToken *transId);
+	void msgin_pong(bdId *id, bdToken *transId, bdToken *versionId);
+	void msgout_pong(bdId *id, bdToken *transId);
+
+	// get_hash (bittorrent get_peers) - get a value for a key from the DHT
+	// TODO: implemented but not hooked up
+	void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
+	// implemented and hooked up
 	void msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *nodeid);
-	void msgin_reply_hash(bdId *id, bdToken *transId, 
-				bdToken *token, std::list<std::string> &values);
-	void msgin_reply_nearest(bdId *id, bdToken *transId, 
-				bdToken *token, std::list<bdId> &nodes);
+	// TODO: implemented, but not hooked up in processRemoteWuery.
+	//		 When called it will need to be passed the hash value to return,
+	//		 which seems to be a list of strings.
+	void msgout_reply_hash(bdId *id, bdToken *transId,
+		  				  bdToken *token, std::list<std::string> &values);
+	// TODO: hooked up, but doesn't extract hash from msg
+	void msgin_reply_hash(bdId *id, bdToken *transId,
+						  bdToken *token, std::list<std::string> &values);
 
-	void msgin_post_hash(bdId *id,  bdToken *transId,  
-				bdNodeId *info_hash,  uint32_t port, bdToken *token);
+	// post_hash (bittorrent announce_peers) - write a key:value to the DHT
+	// TODO: implemented but not hooked up, will need to give it a key:value to write
+	void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
+	                      uint32_t port, bdToken *token);
+	// TODO: hooked up to recv() but does nothing.
+	//		 It should queue a query which then calls msgout_reply_post
+	void msgin_post_hash(bdId *id,  bdToken *transId,
+						 bdNodeId *info_hash,  uint32_t port, bdToken *token);
+	// TODO: not queued by msgin_post_hash
+	//		 need to add code to processRemoteQuery to handle sending this response
+	void msgout_reply_post(bdId *id, bdToken *transId);
+	// TODO: hooked up to recv()? but does nothing.
 	void msgin_reply_post(bdId *id, bdToken *transId);
 
-	void msgout_connect_genmsg(bdId *id, bdToken *transId, int msgtype, 
+
+	// other functions
+	void msgout_reply_nearest(bdId *id, bdToken *transId,
+				bdToken *token, std::list<bdId> &peers);
+	void msgin_reply_nearest(bdId *id, bdToken *transId,
+				bdToken *token, std::list<bdId> &nodes);
+	void msgout_connect_genmsg(bdId *id, bdToken *transId, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 	void msgin_connect_genmsg(bdId *id, bdToken *transId, int msgtype,
                                         bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
-
 
 
 	/* token handling */
@@ -246,6 +260,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	bdStore mStore;
 
 	bdDhtFunctions *mFns;
+	// does not appear to be used, except in reset()
 	bdHashSpace mHashSpace;
 
 	bdFriendList mFriendList;
@@ -257,7 +272,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 	private:
 
-	uint32_t mNodeOptionFlags;	
+	uint32_t mNodeOptionFlags;
 	uint32_t mNodeDhtMode;
 
 	uint32_t mMaxAllowedMsgs;
