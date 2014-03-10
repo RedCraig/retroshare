@@ -159,6 +159,6 @@ SOURCES += \
 	bitdht/bdquerymgr.cc	\
 	util/bdbloom.cc		\
 	bitdht/bdfriendlist.cc	\
-	auth/auth.cc \
+	auth/PasswordAuth.cc \
 
 

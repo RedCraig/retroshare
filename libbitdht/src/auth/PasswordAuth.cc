@@ -23,13 +23,14 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#include "auth.h"
 #include <openssl/sha.h>
+
+#include "PasswordAuth.h"
+#include "Storage.h"
+#include "AuthCryptoFns.h"
 #include "../../libretroshare/src/util/rsaes.h"
 // TODO: remove once test have moved to another file
 #include <assert.h>
-#include "Storage.h"
-#include "AuthCryptoFns.h"
 
 using namespace std;
 
