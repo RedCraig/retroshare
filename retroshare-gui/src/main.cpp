@@ -123,7 +123,8 @@ QString filedialog_existing_directory_hook(QWidget *parent, const QString &capti
 #endif
 
 int main(int argc, char *argv[])
-{ 
+{
+	test_crypto();
 	auth();
 	printf("auth complete\n");
 

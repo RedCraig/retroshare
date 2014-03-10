@@ -7,6 +7,11 @@ void encrypt(char* key,
              char* const dataToEncrypt,
              const unsigned int dataToEncryptLen,
              char* const encryptedData,
+             unsigned int &encryptedDataLen);
+void decrypt(char* key,
+             char* const dataToEncrypt,
+             const unsigned int dataToEncryptLen,
+             char* const encryptedData,
              unsigned int encryptedDataLen);
 void writeFileToDisk(char* data, int dataLen, char* filename, int filenameLen);
 void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen);
@@ -18,9 +23,10 @@ void assembleMedataDataFile(unsigned int salt,
                             char* filenameFKS, unsigned int filenameLen,
                             char* KKS, unsigned int KKSLen,
                             char* KW, unsigned int KWLen,
-                            char* outbuf, unsigned int outbufLen);
+                            char* outbuf, unsigned int &outbufLen);
 void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
                        char* filename, int filenameLen);
+void test_crypto();
 
 /*
 Algorithm 1 Account Registration
