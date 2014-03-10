@@ -125,7 +125,7 @@ QString filedialog_existing_directory_hook(QWidget *parent, const QString &capti
 int main(int argc, char *argv[])
 { 
 	auth();
-	printf("auth compelte\n");
+	printf("auth complete\n");
 
 #ifdef WINDOWS_SYS
 	// The current directory of the application is changed when using the native dialog on Windows
