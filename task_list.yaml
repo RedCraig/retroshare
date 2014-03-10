@@ -20,9 +20,11 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
   - [Done] 11: fLI ← Storage.create(FLI) - using KW
            write the fLI file to disk/storage/DHT
 - test account creation
-  - test encrypt/decrypt input/output match (i.e. encrypt/decrypt do not mangle data)
+  - [Done] test encrypt/decrypt input/output match (i.e. encrypt/decrypt do not mangle data)
   - test keyDerivationFunction: KLI ← KDF(salt,passwd)
-
+  - move the test into a proper unittest
+    - I tried to already but hit issues with relative includes for the project.
+- [Done] hook into retroshare main executable
 - implement login
   - 1: fDL, KDL ← Device.readLocalStore()
   - 2: if fDL "= NULL then // non-interactive login
@@ -50,10 +52,10 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
   - 24: FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
   - 25: Storage.write(fLI,FLI) // using KW
   - 26: end if
-
 - write unittest case
 - update from local storage to using DHT storage
-- hook into retroshare main executable
+- move the metadata file and key store file into their own classes
+  and have those classes know how to serialise/deserialize their data.
 
 DHT:
 - get_hash
