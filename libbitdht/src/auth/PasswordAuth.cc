@@ -34,9 +34,11 @@
 
 using namespace std;
 
-#define PASSWORD_LEN 32
+#define USERNAME_LEN 64
+#define PASSWORD_LEN 64
 #define KEY_LEN 16
 #define PGP_PUB_KEY_LEN 2048
+#define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
 #define FKS_ENCRYPTED_DATA_LEN 1024*3
 #define FILE_NAME_LEN 32
 #define METADATA_SIZE 1024*5
@@ -45,14 +47,15 @@ using namespace std;
 int auth()
 {
     test_crypto();
-    // variables that this function will expect
-    //char uname[32] = "my name";
-    char password[32] = "my password";
-    char Kx1[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
+
+    char username[USERNAME_LEN] = "my name";
+    char password[PASSWORD_LEN] = "my password";
+    // TODO: add private part of pgp key here?
+    char pgpkey[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
 \
 xsBNBFMYXjUBCACdmfb/fC5u3/oIsbnpKXCqZk3OCx0YSiWAg2SeuyLPj1DES06W\
-Yx2eHs0ci7noO6aXbLf0f9+Y4sSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
+Yx2eHs0ci7noO6aXbLf0f9+JIUSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
 tT1BM3JRvIIEBOSlgEKYzJxb0onX4vQ1J1/sQSi1lZUmy0O6svCNmqFg/Kt9Aa3S\
 gNaOeaPDr+hAoYpfyp7m5zYsA5r6Rex6O8qRzTqkTYEAtTq5jAms01YrtluD5GNB\
 RZuhiXNobfosBueYSuK5KlpOJczn8qViUSEPnybbodcZDZpmcdliyQoIqtJiVRny\
@@ -67,8 +70,20 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 =2kN4\
 -----END PGP PUBLIC KEY BLOCK-----\
 --SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
---LOCAL--192.168.1.104:2191;--EXT--87.198.30.166:2191;\
+--LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
+
+    registerAccount(username, USERNAME_LEN,
+                    password, PASSWORD_LEN,
+                    pgpkey, PGP_KEY_LEN);
+
+    return 1;
+}
+
+void registerAccount(char* username, unsigned int usernameLen,
+                     char* password, unsigned int passwordLen,
+                     char* pgpkey, unsigned int pgpkeyLen)
+{
     // 3: KKS ← generateKey()
     //    KKS used to encrypt FKS, the encrypted file with PGP data
     char KKS[KEY_LEN];
@@ -83,7 +98,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     memset(FKS, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int FKSEncryptedLen = FKS_ENCRYPTED_DATA_LEN;
     encrypt(KKS,
-            Kx1, PGP_PUB_KEY_LEN,
+            pgpkey, PGP_PUB_KEY_LEN,
             FKS, FKSEncryptedLen);
     printf("4: FKS ← encryptKKS (Kx1||Kx2|| . . .)\n");
 
@@ -143,8 +158,6 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     // 14: end while
 
     printf("end!\n");
-
-    return 1;
 }
 
 void assembleMedataDataFile(unsigned int salt,

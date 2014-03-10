@@ -9,6 +9,15 @@
 // Entry point for passwords auth. Main logic is here.
 int auth();
 
+// Creates all the necessary parts for an account, writes them using Storage.h.
+void registerAccount(char* username, unsigned int usernameLen,
+                     char* password, unsigned int passwordLen,
+                     char* pgpkey, unsigned int pgpkeyLen);
+
+// Login
+void login(char* username, unsigned int usernameLen,
+           char* password, unsigned int passwordLen);
+
 // Assemble the metadata file, concatenates filenameFKS, KKS and KW into
 // a single buffer then encrypts that buffer using KLI as the hash.
 // Prefixes the buffer with the salt.
