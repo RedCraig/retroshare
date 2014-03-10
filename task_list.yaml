@@ -51,7 +51,7 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
   - 25: Storage.write(fLI,FLI) // using KW
   - 26: end if
 
-- write unittest case
+- write unittests
 - update from local storage to using DHT storage
 - hook into retroshare main executable
 
