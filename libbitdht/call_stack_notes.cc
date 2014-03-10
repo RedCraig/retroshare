@@ -214,36 +214,3 @@ bdNode::recvPkt();
             TODO: this does nothing, it should save and use the hash
 
 
-
-TODO:
-- get_hash
-    // get_hash (bittorrent get_peers) - get a value for a key from the DHT
-    // TODO: implemented but not hooked up
-    void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
-    // implemented and hooked up
-    void msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *nodeid);
-    // TODO: implemented, but not hooked up in processRemoteWuery.
-    //       When called it will need to be passed the hash value to return,
-    //       which seems to be a list of strings.
-    void msgout_reply_hash(bdId *id, bdToken *transId,
-                          bdToken *token, std::list<std::string> &values);
-    // TODO: hooked up, but doesn't extract hash from msg
-    void msgin_reply_hash(bdId *id, bdToken *transId,
-                          bdToken *token, std::list<std::string> &values);
-- post hash
-    // post hash should determine the filename (i.e. key) if possible
-    // post_hash (bittorrent announce_peers) - write a key:value to the DHT
-    // TODO: implemented but not hooked up, will need to give it a key:value to write
-    void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
-    // TODO: hooked up to recv() but does nothing.
-    //       It should queue a query which then calls msgout_reply_post
-    void msgin_post_hash(bdId *id,  bdToken *transId,
-                         bdNodeId *info_hash,  uint32_t port, bdToken *token);
-    // TODO: not queued by msgin_post_hash
-    //       need to add code to processRemoteQuery to handle sending this response
-    void msgout_reply_post(bdId *id, bdToken *transId);
-    // TODO: hooked up to recv()? but does nothing.
-    void msgin_reply_post(bdId *id, bdToken *transId);
-
-then unittest or get RS into a test case to verify we get or send data
-
