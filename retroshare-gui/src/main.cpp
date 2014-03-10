@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA  02110-1301, USA.
  ****************************************************************/
 
@@ -47,7 +47,7 @@
 #include "lang/languagesupport.h"
 #include "util/RsGxsUpdateBroadcast.h"
 
-#include "../../libbitdht/src/auth/auth.h"
+#include "../../libbitdht/src/auth/PasswordAuth.h"
 // craig's # defines
 #define DEBUG_BITDHT
 
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 		if(ret == QMessageBox::Ok)
 		{
 			if(!RsInit::copyGnuPGKeyrings())
-				return 0 ; 
+				return 0 ;
 
 			initResult = RsInit::InitRetroShare(argc, argv);
 
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 		QMessageBox mb(QMessageBox::Critical, QObject::tr("RetroShare"), "", QMessageBox::Ok);
 		mb.setWindowIcon(QIcon(":/images/rstray3.png"));
 
-		switch (initResult) 
+		switch (initResult)
 		{
 			case RS_INIT_AUTH_FAILED:
 				std::cerr << "RsInit::InitRetroShare AuthGPG::InitAuth failed" << std::endl;
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 	RshareSettings::Create ();
 
 	/* Setup The GUI Stuff */
-	Rshare rshare(args, argc, argv, 
+	Rshare rshare(args, argc, argv,
 		QString::fromUtf8(RsInit::RsConfigDirectory().c_str()));
 
 	std::string url = RsInit::getRetroShareLink();
@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
 		Settings->setValue(QString::fromUtf8("FirstRun"), false);
 
 #ifdef __APPLE__
-		/* For OSX, we set the default to "cleanlooks", as the AQUA style hides some input boxes 
+		/* For OSX, we set the default to "cleanlooks", as the AQUA style hides some input boxes
 		 * only on the first run - as the user might want to change it ;)
 		 */
 		QString osx_style("cleanlooks");
