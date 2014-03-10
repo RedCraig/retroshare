@@ -1,0 +1,6 @@
+sudo mount -t vboxsf -o uid=0,gid=999 _retroshare_v0.5.5 retroshare_v0.5.5/
+
+cd ~/retroshare/libbitdht/src && qmake && make clean && make -j2
+cd ~/retroshare/openpgpsdk/src && qmake && make clean && make -j2
+cd ~/retroshare/libretroshare/src && qmake && make clean && make -j2
+cd ~/retroshare/retroshare-gui/src && qmake && make clean && make -j2
