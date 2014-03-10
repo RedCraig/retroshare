@@ -39,6 +39,8 @@
 
 #include "util/bdnet.h"
 
+#include "auth/PasswordAuth.cc"
+
 /*
  * #define DEBUG_UDP_BITDHT 1
  *
@@ -62,6 +64,9 @@ UdpBitDht::UdpBitDht(UdpPublisher *pub, bdNodeId *id, std::string appVersion, st
 {
 	std::string usedVersion;
 
+	// TODO: REMOVE THIS when unittest is working in auth/PasswordAuth
+	test_crypto();
+
 #ifdef BITDHT_VERSION_IDENTIFER
 	usedVersion = "BD";
 	usedVersion += BITDHT_VERSION;
@@ -80,9 +85,9 @@ UdpBitDht::UdpBitDht(UdpPublisher *pub, bdNodeId *id, std::string appVersion, st
 }
 
 
-UdpBitDht::~UdpBitDht() 
-{ 
-	return; 
+UdpBitDht::~UdpBitDht()
+{
+	return;
 }
 
 
@@ -152,7 +157,7 @@ bool UdpBitDht::ConnectionRequest(struct sockaddr_in *laddr, bdNodeId *target, u
 
 
 
-void UdpBitDht::ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc, 
+void UdpBitDht::ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc,
 								uint32_t bandwidth, uint32_t delay, uint32_t answer)
 {
 	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/
@@ -229,7 +234,7 @@ int UdpBitDht:: stopDht()
 	return mBitDhtManager->stopDht();
 }
 
-int UdpBitDht::stateDht() 
+int UdpBitDht::stateDht()
 {
 	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/
 
@@ -278,7 +283,7 @@ int UdpBitDht::recvPkt(void *data, int size, struct sockaddr_in &from)
 	}
 	return 0;
 }
-			
+
 int UdpBitDht::status(std::ostream &out)
 {
 	out << "UdpBitDht::status()" << std::endl;
@@ -308,7 +313,7 @@ void UdpBitDht::getDataTransferred(uint32_t &read, uint32_t &write)
 	clearDataTransferred();
 }
 
-			
+
         /*** Overloaded from iThread ***/
 #define MAX_MSG_PER_TICK	100
 #define TICK_PAUSE_USEC		20000  /* 20ms secs .. max messages = 50 x 100 = 5000 */
@@ -343,7 +348,7 @@ int UdpBitDht::tick()
 
 	while((i < MAX_MSG_PER_TICK) && (mBitDhtManager->outgoingMsg(&toAddr, data, &size)))
 	{
-#ifdef DEBUG_UDP_BITDHT 
+#ifdef DEBUG_UDP_BITDHT
 		std::cerr << "UdpBitDht::tick() outgoing msg(" << size << ") to " << toAddr;
 		std::cerr << std::endl;
 #endif
