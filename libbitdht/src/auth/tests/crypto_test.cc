@@ -1,3 +1,5 @@
+// TODO: THIS DOESN"T WORK AS IT CAN"T IMPORT rsaes.h
+
 #include <string.h>
 #include <stdio.h>
 
@@ -13,36 +15,9 @@
 #define KEY_LEN 16
 
 
-
-void encrypt(char* key,
-             char* const dataToEncrypt,
-             const unsigned int dataToEncryptLen,
-             char* const encryptedData,
-             unsigned int encryptedDataLen)
-{
-    aes_crypt_8_16(reinterpret_cast<unsigned char*>(dataToEncrypt),
-                          dataToEncryptLen,
-                          reinterpret_cast<unsigned char*>(key),
-                          NULL,
-                          reinterpret_cast<unsigned char*>(encryptedData),
-                          encryptedDataLen);
-}
-
-void decrypt(char* key,
-             char* const dataToEncrypt,
-             const unsigned int dataToEncryptLen,
-             char* const encryptedData,
-             unsigned int encryptedDataLen)
-{
-    RsAES::aes_decrypt_8_16(reinterpret_cast<unsigned char*>(dataToEncrypt),
-                            dataToEncryptLen,
-                            reinterpret_cast<unsigned char*>(key),
-                            NULL,
-                            reinterpret_cast<unsigned char*>(encryptedData),
-                            encryptedDataLen);
-}
-
-int test_crypto()
+// TODO: move this to a test file, had issues doing this first time
+//       with imports of libretroshare/src/util/rsaes.h
+void test_crypto()
 {
     char Kx1[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
@@ -65,22 +40,28 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
 --LOCAL--192.168.1.104:2191;--EXT--87.198.30.166:2191;\
 \0";
+    printf("--1. Kx1:\n[%s]\n", Kx1);
 
     char KKS[KEY_LEN];
     memset(KKS, '\0', KEY_LEN);
+    generateKey(KKS, KEY_LEN);
 
-    char FKS[FKS_ENCRYPTED_DATA_LEN];
-    memset(FKS, '\0', FKS_ENCRYPTED_DATA_LEN);
-    printf("--1. Kx1:\n[%s]\n", Kx1);
-
+    char encryptedData[FKS_ENCRYPTED_DATA_LEN];
+    memset(encryptedData, '\0', FKS_ENCRYPTED_DATA_LEN);
+    unsigned int encryptedDataLen = FKS_ENCRYPTED_DATA_LEN + 17 + 1;
     encrypt(KKS,
             Kx1, PGP_PUB_KEY_LEN,
-            FKS, FKS_ENCRYPTED_DATA_LEN);
-    printf("--2. Kx1 encrypted into FKS:\n[%s]\n", FKS);
+            encryptedData, encryptedDataLen);
+    printf("--2. Kx1 encrypted into encryptedData(%d):\n[%s]\n", encryptedDataLen, encryptedData);
 
+    // RsAES::AES_BLOCK_SIZE = 17
+    unsigned int decryptedDataLen = FKS_ENCRYPTED_DATA_LEN + 17 + 1 + 17 + 1;;
+    char decryptedData[decryptedDataLen];
+    memset(decryptedData, '\0', FKS_ENCRYPTED_DATA_LEN);
     decrypt(KKS,
-            Kx1, PGP_PUB_KEY_LEN,
-            FKS, FKS_ENCRYPTED_DATA_LEN);
-    printf("--3. decrypted FKS:\n[%s]\n", FKS);
+            encryptedData, encryptedDataLen,
+            decryptedData, decryptedDataLen);
+    printf("--3. decryptedData(%d):\n[%s]\n", decryptedDataLen, decryptedData);
 
+    assert(Kx1 == decryptedData)
 }

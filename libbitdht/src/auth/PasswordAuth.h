@@ -1,32 +1,26 @@
+/*
+ * Author: Craig McInnes
+ * Date: 10/03/2014
+ *
+ * Passwords paper implementation:
+ * http://dx.doi.org/10.1109/P2P.2012.6335797
+*/
 
+// Entry point for passwords auth. Main logic is here.
 int auth();
 
-// Account Registration process
-void generateKey(char *key, int keylen);
-void encrypt(char* key,
-             char* const dataToEncrypt,
-             const unsigned int dataToEncryptLen,
-             char* const encryptedData,
-             unsigned int &encryptedDataLen);
-void decrypt(char* key,
-             char* const dataToEncrypt,
-             const unsigned int dataToEncryptLen,
-             char* const encryptedData,
-             unsigned int encryptedDataLen);
-void writeFileToDisk(char* data, int dataLen, char* filename, int filenameLen);
-void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen);
-unsigned int generateSalt();
-void keyDerivationFunction(unsigned int salt, char* password, int passwordLen,
-                           unsigned char* key, int keylen);
+// Assemble the metadata file, concatenates filenameFKS, KKS and KW into
+// a single buffer then encrypts that buffer using KLI as the hash.
+// Prefixes the buffer with the salt.
+// Puts the final data into outbuf.
 void assembleMedataDataFile(unsigned int salt,
                             unsigned char* KLI, unsigned int KLILen,
                             char* filenameFKS, unsigned int filenameLen,
                             char* KKS, unsigned int KKSLen,
                             char* KW, unsigned int KWLen,
                             char* outbuf, unsigned int &outbufLen);
-void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
-                       char* filename, int filenameLen);
-void test_crypto();
+
+
 
 /*
 Algorithm 1 Account Registration
