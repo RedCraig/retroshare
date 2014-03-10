@@ -1,0 +1,12 @@
+*.o
+*.out
+*.a
+*.project
+*.cproject
+*.rar
+retroshare-gui/src/temp/moc/moc_*
+retroshare-gui/src/temp/ui/ui_*
+retroshare-gui/src/temp/qrc/qrc_*
+.Trash*
+.gdbinit
+*/.settings/language.settings.xml
