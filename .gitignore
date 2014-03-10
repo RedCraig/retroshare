@@ -10,3 +10,17 @@ retroshare-gui/src/temp/qrc/qrc_*
 .Trash*
 .gdbinit
 */.settings/language.settings.xml
+libbitdht/src/Makefile
+libbitdht/src/auth/dht_filename_for_fks.txt
+libbitdht/src/output.txt
+libbitdht/src/tests/bdmetric_test
+libbitdht/src/tests/bdmsgs_test
+libbitdht/src/tests/bdspace_test
+libretroshare/src/Makefile
+openpgpsdk/src/Makefile
+retroshare-gui/src/Makefile
+retroshare-gui/src/RetroShare
+retroshare-gui/src/dht_filename_for_fks.txt
+retroshare-gui/src/main.cpp.bak
+retroshare-gui/src/metadata.txt
+retroshare-gui/src/temp/
