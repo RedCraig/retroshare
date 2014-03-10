@@ -1,7 +1,15 @@
 // DHT lookup uname, returns f[LI] (metadata filename)
 // DHT lookup f[LI], returns F[LI] (metadata file)
 // in file F[LI] get the filename f[KS] of the file F[KS], which is the PGP keystore file
-// NOTE: DHT should set the filename itself,
+// NOTE: DHT should set the filename itself, so that it can retry in case of a
+//       file already existing with the same name.
+
+// TODO:
+//      when writing to metadata file, i'm using hardcoded lengths. This code will
+//      also have to use these lengths, magically - OR we can change the code
+//      here to write the length of each string/buffer first, followed by the
+//      buffer so that this code can correctly deserialize them when reading the
+//      file back from the DHT and the lengths are unknown.
 
 #include <stdio.h>
 #include <string.h>
@@ -9,39 +17,21 @@
 #include <fstream>
 #include "auth.h"
 #include <openssl/sha.h>
+#include "../../libretroshare/src/util/rsaes.h"
 
 using namespace std;
 
-
-/*
-Algorithm 1 Account Registration
-1: uname ← User.input(“Choose username:”)
-2: passwd ← User.input(“Choose strong password:”)
-3: KK S ← generateKey()
-4: FKS ← encryptKKS (Kx1||Kx2|| . . .)
-5: fK S ← Storage.create(FK S )
-6: salt ← generateSalt()
-7: devmap ← createMap()
-8: KLI ← KDF(salt,passwd)
-9: KW ← generateKey() // suitable for the storage system
-10: FLI ← salt||encryptKLI (fKS||KKS||KW ||devmap)
-11: fLI ← Storage.create(FLI ) // using KW
-12: while DHT.put(uname,fLI ) fails
-13: uname ← User.input(“Choose new username:”)
-14: end while
-*/
-
 #define PASSWORD_LEN 32
-#define KKS_LEN 32
+#define KEY_LEN 16
 #define PGP_PUB_KEY_LEN 2048
 #define FKS_ENCRYPTED_DATA_LEN 2048
 #define FILE_NAME_LEN 32
-
+#define METADATA_SIZE 1024*5
 
 int auth()
 {
     // variables that this function will expect
-    char uname[32] = "my name";
+    //char uname[32] = "my name";
     char password[32] = "my password";
     char Kx1[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
@@ -64,22 +54,29 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
 --LOCAL--192.168.1.104:2191;--EXT--87.198.30.166:2191;\
 \0";
-
-    char kks[KKS_LEN];
-    generateKey(kks, KKS_LEN);
+    // 3: KKS ← generateKey()
+    //    KKS used to encrypt FKS, the encrypted file with PGP data
+    char KKS[KEY_LEN];
+    memset(KKS, '\0', KEY_LEN);
+    generateKey(KKS, KEY_LEN);
     printf("3: KKS ← generateKey()\n");
 
     // 4: FKS ← encryptKKS (Kx1||Kx2|| . . .)
+    //    encrypt PGP auth data into FKS
     char FKS[FKS_ENCRYPTED_DATA_LEN];
-    encrypt(kks,
+    memset(FKS, '\0', FKS_ENCRYPTED_DATA_LEN);
+
+    encrypt(KKS,
             Kx1, PGP_PUB_KEY_LEN,
             FKS, FKS_ENCRYPTED_DATA_LEN);
     printf("4: FKS ← encryptKKS (Kx1||Kx2|| . . .)\n");
 
     // 5: fKS ← Storage.create(FKS)
+    //    write FKS (encrypted PGP auth data) into storage
     char filenameFKS[FILE_NAME_LEN];
-    writeFile(FKS, FKS_ENCRYPTED_DATA_LEN, filenameFKS, FILE_NAME_LEN);
-    printf("5: fKS ← Storage.create(FKS)\n");
+    memset(filenameFKS, '\0', FILE_NAME_LEN);
+    writeFKSFile(FKS, FKS_ENCRYPTED_DATA_LEN, filenameFKS, FILE_NAME_LEN);
+    cout << "5: fKS ← Storage.create(FKS)" << filenameFKS << endl;
 
     // 6: salt ← generateSalt()
     unsigned int salt = generateSalt();
@@ -87,29 +84,43 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 
     // 7: devmap ← createMap()
     // 8: KLI ← KDF(salt,passwd)
+    //    keyDerivationFunction() uses SHA1 to generate KLI from salt and password
     unsigned char KLI[SHA_DIGEST_LENGTH];
+    memset(KLI, '\0', SHA_DIGEST_LENGTH);
     keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
     cout << "8: KLI ← KDF(salt,passwd)" << KLI << endl;
 
     // 9: KW ← generateKey() // suitable for the storage system
-    char KW[KKS_LEN];
-    generateKey(KW, KKS_LEN);
-    cout << "9: KW ← generateKey()" << KW << endl;
+    char KW[KEY_LEN];
+    memset(KW, '\0', KEY_LEN);
+    generateKey(KW, KEY_LEN);
+    cout << "9: KW ← generateKey()" << endl;
 
     // 10: FLI ← salt||encrypt(KLI) (fKS||KKS||KW ||devmap)
+    //     Encrypt data in local file: (fKS, KKS, KW) using symmetric key KLI.
     //     concatenate the data for the metadata file
     //     encrypt the data
     //     prefix the salt
-    assembleMedataDataFile(salt, filenameFKS);
+    char metadataBuff[METADATA_SIZE];
+    memset(metadataBuff, '\0', METADATA_SIZE);
+    // TODO: Could make a class for the metadata file, which handled (de)serialise
+    //       It could also have a DHT write fn.
+    assembleMedataDataFile(salt,
+                           KLI, SHA_DIGEST_LENGTH,
+                           filenameFKS, FILE_NAME_LEN,
+                           KKS, KEY_LEN,
+                           KW, KEY_LEN,
+                           metadataBuff, METADATA_SIZE);
+    // 11: fLI ← Storage.create(FLI)
+    //     using KW, write the fLI file to disk/storage/DHT
+    char metadataFilename[FILE_NAME_LEN];
+    memset(metadataFilename, '\0', FILE_NAME_LEN);
+    writeMetadataFile(metadataBuff, METADATA_SIZE,
+                      metadataFilename, FILE_NAME_LEN);
 
-    // 11: fLI ← Storage.create(FLI) // using KW
-    //     write the fLI file to disk/storage/DHT
-    writeMedataDataFile();
 
     // 12: while DHT.put(uname, fLI) fails
-
     // 13: uname ← User.input(“Choose new username:”)
-
     // 14: end while
 
     printf("end!\n");
@@ -126,21 +137,51 @@ void generateKey(char *key, int keylen)
 }
 
 void encrypt(char* key,
-             char* dataToEncrypt, int dataToEncryptLen,
-             char* enctyptedData, int enctyptedDataLen)
+             char* const dataToEncrypt,
+             const unsigned int dataToEncryptLen,
+             char* const encryptedData,
+             unsigned int encryptedDataLen)
 {
     // TODO: THIS ACTUALLY NEEDS TO ENCRYPT
     // symmetric key encrypt 'data' with key, output to encryptedData
     // aes?
 
-    //assert(dataToEncryptLen <= enctyptedDataLen)
-    // dest, src, dest len
-    memcpy(enctyptedData, dataToEncrypt, enctyptedDataLen);
+    // static bool   aes_crypt_8_16(const uint8_t *input_data,
+    //                              uint32_t input_data_length,
+    //                              uint8_t key[16],
+    //                              uint8_t salt[8],
+    //                              uint8_t *output_data,
+    //                              uint32_t& output_data_length);
+    // static bool aes_decrypt_8_16(const uint8_t *input_data,
+    //                              uint32_t input_data_length,
+    //                              uint8_t key[16],
+    //                              uint8_t salt[8],
+    //                              uint8_t *output_data,
+    //                              uint32_t& output_data_length);
+
+
+
+    // TODO: reinterpret_cast for this call might be borking the data that I'm
+    //       passing in. Double check intput/output match expected values.
+    // Encrypt concatenated data [salt||encrypt(KLI, (fKS||KKS||KW))] using
+    // using symmetric key KLI (aes encrypt/decrypt).
+    // TODO: we're not using a salt so that this is repeatable(?)
+    //       test that data we encrypt, can be decrypted with the same key
+    RsAES::aes_crypt_8_16(reinterpret_cast<unsigned char*>(dataToEncrypt),
+                          dataToEncryptLen,
+                          reinterpret_cast<unsigned char*>(key),
+                          NULL,
+                          reinterpret_cast<unsigned char*>(encryptedData),
+                          encryptedDataLen);
 }
 
-void writeFile(char* data, int dataLen, char* filename, int filenameLen)
+void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen)
 {
-    snprintf(filename, filenameLen, "dht_filename_for_fks.txt");
+    snprintf(filename, filenameLen, "dht_filename_for_FKS.txt");
+    writeFileToDisk(data, dataLen, filename, filenameLen);
+}
+void writeFileToDisk(char* data, int dataLen, char* filename, int filenameLen)
+{
 
     ofstream dhtfile;
     dhtfile.open(filename);
@@ -172,13 +213,41 @@ void keyDerivationFunction(unsigned int salt, char* password, int passwordLen,
     SHA1_Final(key, &ctx);
 }
 
-void assembleMedataDataFile(salt, filenameFKS)
+void assembleMedataDataFile(unsigned int salt,
+                            unsigned char* KLI, unsigned int KLILen,
+                            char* filenameFKS, unsigned int filenameLen,
+                            char* KKS, unsigned int KKSLen,
+                            char* KW, unsigned int KWLen,
+                            char* outbuf, const unsigned int outbufLen)
 {
+    // prefix the salt
+    // concatenate the data for the metadata file
+    // encrypt the data
 
+    // prefix the salt
+    memcpy(outbuf, &salt, sizeof(salt));
+
+    // concatenate the data for the metadata file
+    char temp[outbufLen];
+
+    memcpy(temp, filenameFKS, filenameLen);
+    unsigned int usedBufLen = filenameLen;
+
+    memcpy(temp+usedBufLen, KKS, KKSLen);
+    usedBufLen += KKSLen;
+
+    memcpy(temp+usedBufLen, KW, KWLen);
+    usedBufLen += KWLen;
+
+    // temp[usedBufLen]
+    memcpy( outbuf+sizeof(salt), temp, outbufLen);
+    encrypt((char*)KLI, temp, usedBufLen,
+            outbuf+sizeof(salt), outbufLen-sizeof(salt));
 }
 
-/*
-paper notes:
-- distributed storage allows for brute forcing
-- why is the salt in plaintext, makes it easier to hack/brute force
-*/
+void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
+                       char* filename, int filenameLen)
+{
+    snprintf(filename, filenameLen, "metadata.txt");
+    writeFileToDisk(metadataBuf, metadataLen, filename, filenameLen);
+}
