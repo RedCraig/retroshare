@@ -1,0 +1,148 @@
+TODO
+^^^^
+
+Passwords:
+Implement passwords design in retroshare (store locally if I still have DHT issues)
+- implement account creation
+  - [Done] 3: KKS ← generateKey()
+           KKS used to encrypt FKS, the encrypted file with PGP data
+  - [Done] 4: FKS ← encryptKKS (Kx1||Kx2|| . . .)
+           encrypt PGP auth data into FKS
+  - [Done] 5: fKS ← Storage.create(FKS)
+           write FKS (encrypted PGP auth data) into local storage
+  - [Done] 6: salt ← generateSalt()
+  - [Done] 8: KLI ← KDF(salt,passwd)
+           keyDerivationFunction() uses SHA1 to generate KLI from salt and password
+  - [Done] 9: KW ← generateKey() // suitable for the storage system
+  - [Done] 10: FLI ← salt||encrypt(KLI) (fKS||KKS||KW ||devmap)
+    - [Done] implement fn which concatenates the salt + data buffers and returns as a single buffer
+    - [Done] Encrypt concatenated data [salt||encrypt(KLI, (fKS||KKS||KW))] using using symmetric key KLI (aes encrypt/decrypt)
+  - [Done] 11: fLI ← Storage.create(FLI) - using KW
+           write the fLI file to disk/storage/DHT
+- test account creation
+  - test encrypt/decrypt input/output match (i.e. encrypt/decrypt do not mangle data)
+  - test keyDerivationFunction: KLI ← KDF(salt,passwd)
+
+- implement login
+  - 1: fDL, KDL ← Device.readLocalStore()
+  - 2: if fDL "= NULL then // non-interactive login
+  - 3: FDL ← Storage.read(fDL)
+  - 4: fKS, KKS ← decryptKDL(FDL)
+  - 5: saveLoginLocally ← False
+  - 6: else // interactive login
+  - 7: uname ← User.input(“Enter username:”)
+  - 8: passwd ← User.input(“Enter password:”)
+  - 9: saveLoginLocally ← User.input(“Remember?”)
+  - 10: fLI ← DHT.get(uname)
+  - 11: FLI ← Storage.read(fLI)
+  - 12: salt ← FLI.salt // stored in plaintext
+  - 13: KLI ← KDF(salt,passwd)
+  - 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
+  - 15: end if
+  - 16: FKS ← Storage.read(fKS)
+  - 17: Kx1, Kx2,... ← decryptKKS (FKS)
+  - 18: if saveLoginLocally then
+  - 19: KDL ← generateKey()
+  - 20: FDL ← encryptKDL(fKS||KKS)
+  - 21: fDL ← Storage.create(FDL)
+  - 22: Device.writeLocalStore(fDL||KDL)
+  - 23: devmap.append(Device.ID, fDL||KDL)
+  - 24: FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
+  - 25: Storage.write(fLI,FLI) // using KW
+  - 26: end if
+
+- write unittest case
+- update from local storage to using DHT storage
+- hook into retroshare main executable
+
+DHT:
+- get_hash
+    // get_hash (bittorrent get_peers) - get a value for a key from the DHT
+    // TODO: implemented but not hooked up
+    void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
+    // implemented and hooked up
+    void msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *nodeid);
+    // TODO: implemented, but not hooked up in processRemoteWuery.
+    //       When called it will need to be passed the hash value to return,
+    //       which seems to be a list of strings.
+    void msgout_reply_hash(bdId *id, bdToken *transId,
+                          bdToken *token, std::list<std::string> &values);
+    // TODO: hooked up, but doesn't extract hash from msg
+    void msgin_reply_hash(bdId *id, bdToken *transId,
+                          bdToken *token, std::list<std::string> &values);
+- post hash
+    // post hash should determine the filename (i.e. key) if possible
+    // post_hash (bittorrent announce_peers) - write a key:value to the DHT
+    // TODO: implemented but not hooked up, will need to give it a key:value to write
+    void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
+    // TODO: hooked up to recv() but does nothing.
+    //       It should queue a query which then calls msgout_reply_post
+    void msgin_post_hash(bdId *id,  bdToken *transId,
+                         bdNodeId *info_hash,  uint32_t port, bdToken *token);
+    // TODO: not queued by msgin_post_hash
+    //       need to add code to processRemoteQuery to handle sending this response
+    void msgout_reply_post(bdId *id, bdToken *transId);
+    // TODO: hooked up to recv()? but does nothing.
+    void msgin_reply_post(bdId *id, bdToken *transId);
+
+- Then unittest or get RS into a test case to verify we get or send data.
+  If this doesn't work out of the box, debugging could take a _lot_ of time.
+
+
+paper notes:
+- distributed storage allows for brute forcing
+- why is the salt in plaintext, makes it easier to hack/brute force
+
+
+task list:
+- figure out what bittorrent dht command retroshare is using to add it's peers to the bitDHT
+  - likely announce_peer
+  - but they also have to find peers ?
+- figure out bitdht message handling
+- add a new message to get a key
+  - add the message type
+  - add a send message fn to send the message
+    - figure out where to hardcode a message send
+  - add a message receiver (does it use callbacks?)
+- add code to add the actual key:value to the DHT (urp!)
+- add code to read a value from the DHT
+- re-read passwords paper and create todo list from that
+
+
+last trying:
+to figure out how to make dht calls, found some in iface and the queries in bdquerymgr, but can't find any trace of 'token' in response from dht.
+- need to figure out what api calls dht makes to bitdht mainline
+
+- retroshare uses bitdht mainline to find their friends, so the find logic must start there
+- retroshare must use bitdht mainline to hold their own rshash:(ip:port) entry,
+  - where is this written?
+  - which bitdht call creates this entry?
+
+- Need to trace through how queries and results are handled still
+  bdiface::libbitdht/src/bitdht/bdiface.h
+  class BitDhtCallback:
+      dhtPeerCallback
+      dhtValueCallback
+      dhtInfoCallback
+
+- for callbacks, what is the difference between a peer and a node?
+
+- bitdht/src/bdnode.cc looks like it has message types
+  bdNode::iteration() is what's called near the start of the callback stack:
+    p3BdCallback::dhtNodeCallback() at p3bitdht.cc:54 0xac70f3
+    bdNodeManager::doNodeCallback() at bdmanager.cc:1,147 0xd3e5b7
+    bdNodeManager::addPeer() at bdmanager.cc:1,124 0xd3e5eb
+    bdNode::recvPkt() at bdnode.cc:1,555 0xd3ccf8
+    bdNode::iteration() at bdnode.cc:312 0xd3d1da
+    bdNodeManager::iteration() at bdmanager.cc:495 0xd3f4ff
+    UdpBitDht::run() at udpbitdht.cc:327 0xd2cdc7
+    bdthread_init() at bdthreads.cc:57 0xd44dbf
+
+- what determines the message type enum values? they must be shared with bittorrent, otherwise the bittorrent nodes wouldn't be able to handle them. The message format must be shared too.
+
+- left it here:
+bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
+  msgout_find_node(id, &transId, targetNodeId);
+  - trying to figure out the stack/how/when bitdht sends a find_node message
+  - it appears to be the only handled incoming message in bdnode? surely not, rs must support the other bittorrent calls right?
+  - even if find_node is enough, how do you go from find_node to getting a key:value from the find_node call? I don't think you can.
