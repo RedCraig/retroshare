@@ -20,3 +20,5 @@ void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen);
 // char* filename to that value.
 void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
                        char* filename, int filenameLen);
+
+void readFile(char* filename, char* buf, const unsigned int bufLen);

@@ -29,3 +29,22 @@ void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
     snprintf(filename, filenameLen, "password_auth_metadata.txt");
     writeFileToDisk(metadataBuf, metadataLen, filename, filenameLen);
 }
+
+void readFile(char* filename, char* buf, const unsigned int bufLen)
+{
+    unsigned int position = 0;
+    std::ifstream infile(filename);
+    if(infile.is_open())
+    {
+        while(!infile.eof() && position < bufLen)
+        {
+            infile.get(buf[position]);
+            position++;
+        }
+        buf[position-1] = '\0';
+    }
+    else
+    {
+        std::cout << "File" << filename << "could not be opened." << std::endl;
+    }
+}
