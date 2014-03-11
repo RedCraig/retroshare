@@ -6,6 +6,9 @@
  * http://dx.doi.org/10.1109/P2P.2012.6335797
 */
 
+#ifndef PASSWORD_AUTH_H
+#define PASSWORD_AUTH_H
+
 // Entry point for passwords auth. Main logic is here.
 bool auth();
 
@@ -98,3 +101,5 @@ Algorithm 2 Login
 25: Storage.write(fLI,FLI) // using KW
 26: end if
 */
+
+#endif // PASSWORD_AUTH_H

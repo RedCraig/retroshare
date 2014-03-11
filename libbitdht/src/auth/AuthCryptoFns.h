@@ -5,6 +5,9 @@
  * Contains generic somewhat crypto related fns for auth.
 */
 
+#ifndef AUTH_CRYPTO_FNS_H
+#define AUTH_CRYPTO_FNS_H
+
 // Account Registration process functions
 void generateKey(char *key, int keylen);
 
@@ -43,3 +46,5 @@ void keyDerivationFunction(const unsigned int salt,
 
 // Test fn which encrypts and decrypts to verify what goes in comes back out.
 void test_crypto();
+
+#endif //AUTH_CRYPTO_FNS_H
