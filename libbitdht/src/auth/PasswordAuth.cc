@@ -19,20 +19,12 @@
 //      buffer so that this code can correctly deserialize them when reading the
 //      file back from the DHT and the lengths are unknown.
 
-#include <stdio.h>
-#include <string.h>
-#include <iostream>
-#include <fstream>
-#include <openssl/sha.h>
+// #include <stdio.h>
+// #include <string.h>
 
 #include "PasswordAuth.h"
-#include "Storage.h"
-#include "AuthCryptoFns.h"
-#include "../../libretroshare/src/util/rsaes.h"
-// TODO: remove once test have moved to another file
-#include <assert.h>
-
-using namespace std;
+#include "Storage.cc"
+#include "AuthCryptoFns.cc"
 
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
@@ -44,9 +36,10 @@ using namespace std;
 #define METADATA_SIZE 1024*5
 
 
-int auth()
+bool auth()
 {
     test_crypto();
+    std::ifstream random("/dev/urandom", std::ios_base::in);
 
     char username[USERNAME_LEN] = "my name";
     char password[PASSWORD_LEN] = "my password";
@@ -77,7 +70,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
                     password, PASSWORD_LEN,
                     pgpkey, PGP_KEY_LEN);
 
-    return 1;
+    return true;
 }
 
 void registerAccount(char* username, unsigned int usernameLen,
@@ -107,11 +100,11 @@ void registerAccount(char* username, unsigned int usernameLen,
     char filenameFKS[FILE_NAME_LEN];
     memset(filenameFKS, '\0', FILE_NAME_LEN);
     writeFKSFile(FKS, FKSEncryptedLen, filenameFKS, FILE_NAME_LEN);
-    cout << "5: fKS ← Storage.create(FKS)" << filenameFKS << endl;
+    std::cout << "5: fKS ← Storage.create(FKS)" << filenameFKS << std::endl;
 
     // 6: salt ← generateSalt()
     unsigned int salt = generateSalt();
-    cout << "6. Salt: " << salt << endl;
+    std::cout << "6. Salt: " << salt << std::endl;
 
     // 7: devmap ← createMap()
     // 8: KLI ← KDF(salt,passwd)
@@ -119,13 +112,13 @@ void registerAccount(char* username, unsigned int usernameLen,
     unsigned char KLI[SHA_DIGEST_LENGTH];
     memset(KLI, '\0', SHA_DIGEST_LENGTH);
     keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
-    cout << "8: KLI ← KDF(salt,passwd)" << KLI << endl;
+    std::cout << "8: KLI ← KDF(salt,passwd)" << KLI << std::endl;
 
     // 9: KW ← generateKey() // suitable for the storage system
     char KW[KEY_LEN];
     memset(KW, '\0', KEY_LEN);
     generateKey(KW, KEY_LEN);
-    cout << "9: KW ← generateKey()" << endl;
+    std::cout << "9: KW ← generateKey()" << std::endl;
 
     // 10: FLI ← salt||encrypt(KLI) (fKS||KKS||KW ||devmap)
     //     Encrypt data in local file: (fKS, KKS, KW) using symmetric key KLI.
@@ -149,7 +142,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     //     using KW, write the fLI file to disk/storage/DHT
     char metadataFilename[FILE_NAME_LEN];
     memset(metadataFilename, '\0', FILE_NAME_LEN);
-    writeMetadataFile(metadataBuff, METADATA_SIZE,
+    writeMetadataFile(metadataBuff, metadataLen,
                       metadataFilename, FILE_NAME_LEN);
 
 
@@ -187,7 +180,7 @@ void assembleMedataDataFile(unsigned int salt,
     usedBufLen += KWLen;
 
     // temp[usedBufLen]
-    memcpy( outbuf+sizeof(salt), temp, outbufLen);
+    memcpy(outbuf+sizeof(salt), temp, outbufLen);
     unsigned int metadatalen = outbufLen-sizeof(salt);
     encrypt((char*)KLI, temp, usedBufLen,
             outbuf+sizeof(salt), metadatalen);
@@ -195,3 +188,70 @@ void assembleMedataDataFile(unsigned int salt,
     outbufLen = metadatalen;
 }
 
+void interactiveLogin()
+{
+
+/*
+Algorithm 2 Login
+1: fDL, KDL ← Device.readLocalStore()
+2: if fDL "= NULL then // non-interactive login
+3: FDL ← Storage.read(fDL)
+4: fKS, KKS ← decryptKDL(FDL)
+5: saveLoginLocally ← False
+6: else // interactive login
+7: uname ← User.input(“Enter username:”)
+8: passwd ← User.input(“Enter password:”)
+9: saveLoginLocally ← User.input(“Remember?”)
+10: fLI ← DHT.get(uname)
+11: FLI ← Storage.read(fLI)
+12: salt ← FLI.salt // stored in plaintext
+13: KLI ← KDF(salt,passwd)
+14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
+15: end if
+16: FKS ← Storage.read(fKS)
+17: Kx1, Kx2,... ← decryptKKS (FKS)
+18: if saveLoginLocally then
+19: KDL ← generateKey()
+20: FDL ← encryptKDL(fKS||KKS)
+21: fDL ← Storage.create(FDL)
+22: Device.writeLocalStore(fDL||KDL)
+23: devmap.append(Device.ID, fDL||KDL)
+24: FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
+25: Storage.write(fLI,FLI) // using KW
+26: end if
+*/
+
+
+// 6: else // interactive login
+// 7:    uname ← User.input(“Enter username:”)
+// 8:    passwd ← User.input(“Enter password:”)
+// 9:    saveLoginLocally ← User.input(“Remember?”)
+// 10:   fLI ← DHT.get(uname)
+// 11:   FLI ← Storage.read(fLI)
+// 12:   salt ← FLI.salt // stored in plaintext
+// 13:   KLI ← KDF(salt,passwd)
+// 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
+// 15: end if
+
+
+
+}
+
+// Algorithm 2 Login
+// 1: fDL, KDL ← Device.readLocalStore()
+// 2:    if fDL "= NULL then // non-interactive login
+// 3:    FDL ← Storage.read(fDL)
+// 4:    fKS, KKS ← decryptKDL(FDL)
+// 5:    saveLoginLocally ← False
+
+// 16: FKS ← Storage.read(fKS)
+// 17: Kx1, Kx2,... ← decryptKKS (FKS)
+// 18: if saveLoginLocally then
+// 19:   KDL ← generateKey()
+// 20:   FDL ← encryptKDL(fKS||KKS)
+// 21:   fDL ← Storage.create(FDL)
+// 22:   Device.writeLocalStore(fDL||KDL)
+// 23:   devmap.append(Device.ID, fDL||KDL)
+// 24:   FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
+// 25:   Storage.write(fLI,FLI) // using KW
+// 26: end if

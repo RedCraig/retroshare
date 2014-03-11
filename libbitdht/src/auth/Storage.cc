@@ -4,8 +4,8 @@
  *
  * IO fns for auth.
 */
-
-#include <storage.h>
+#include <fstream>      // std::ifstream, std::ofstream
+#include "storage.h"
 
 
 void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen)
@@ -17,15 +17,15 @@ void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen)
 void writeFileToDisk(char* data, int dataLen, char* filename, int filenameLen)
 {
 
-    ofstream dhtfile;
-    dhtfile.open(filename);
-    dhtfile.write(data, dataLen);
-    dhtfile.close();
+    std::ofstream outfile;
+    outfile.open(filename);
+    outfile.write(data, dataLen);
+    outfile.close();
 }
 
 void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
                        char* filename, int filenameLen)
 {
-    snprintf(filename, filenameLen, "metadata.txt");
+    snprintf(filename, filenameLen, "password_auth_metadata.txt");
     writeFileToDisk(metadataBuf, metadataLen, filename, filenameLen);
 }

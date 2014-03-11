@@ -7,7 +7,7 @@
 */
 
 // Entry point for passwords auth. Main logic is here.
-int auth();
+bool auth();
 
 // Creates all the necessary parts for an account, writes them using Storage.h.
 void registerAccount(char* username, unsigned int usernameLen,

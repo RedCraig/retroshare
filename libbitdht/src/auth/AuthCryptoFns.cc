@@ -5,12 +5,24 @@
  * Contains generic somewhat crypto related fns for auth.
 */
 #include "AuthCryptoFns.h"
+#include <openssl/sha.h>
+#include <fstream>      // std::ifstream
+
+// TODO: fix relative import once makefile has been updated
+#include "../../libretroshare/src/util/rsaes.h"
+
+// TODO: remove once test have moved to another file
+#include <assert.h>
+#define KEY_LEN 16
+#define PGP_PUB_KEY_LEN 2048
+#define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
+#define FKS_ENCRYPTED_DATA_LEN 1024*3
 
 
 void generateKey(char *key, int keylen)
 {
     // TODO: not cross platform, unix only
-    ifstream random("/dev/urandom", ios_base::in);
+    std::ifstream random("/dev/urandom", std::ios_base::in);
     random.read(reinterpret_cast<char*>(key), keylen);
     random.close();
 }
@@ -76,7 +88,7 @@ void decrypt(char* key,
 unsigned int generateSalt()
 {
     // TODO: not cross platform, unix only
-    ifstream random("/dev/urandom", ios_base::in);
+    std::ifstream random("/dev/urandom", std::ios_base::in);
     unsigned int salt;
     random.read(reinterpret_cast<char*>(&salt), sizeof(salt));
     random.close();
@@ -146,5 +158,5 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
             decryptedData, decryptedDataLen);
     // printf("--3. decryptedData(%d):\n[%s]\n", decryptedDataLen, decryptedData);
 
-    assert(Kx1 == decryptedData);
+    assert(strcmp(Kx1, decryptedData) == 0);
 }
