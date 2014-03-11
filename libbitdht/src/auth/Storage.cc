@@ -5,7 +5,7 @@
  * IO fns for auth.
 */
 #include <fstream>      // std::ifstream, std::ofstream
-#include "storage.h"
+#include "Storage.h"
 
 
 void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen)
