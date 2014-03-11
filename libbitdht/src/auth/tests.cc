@@ -1,10 +1,26 @@
-#include "PasswordAuth.h"
-#include <assert.h>
+/*
+ * Author: Craig McInnes
+ * Date: 10/03/2014
+ *
+ * Test fns for Password auth.
+*/
 
+#include <assert.h>
+#include <openssl/sha.h>
+#include <string.h>
+
+#include "PasswordAuth.h"
+#include "Storage.h"
+#include "AuthCryptoFns.h"
+
+#define PASSWORD_LEN 64
 #define KEY_LEN 16
 #define PGP_PUB_KEY_LEN 2048
 #define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
 #define FKS_ENCRYPTED_DATA_LEN 1024*3
+#define FILE_NAME_LEN 32
+#define METADATA_SIZE 1024*5
+
 
 void test_readWriteArray()
 {
@@ -37,15 +53,73 @@ void test_readWriteArray()
     assert(strcmp(data2, readData2) == 0);
 }
 
-// void test_packUnpackMetadata()
-// {
+void test_packUnpackMetadata()
+{
+    char password[PASSWORD_LEN] = "my password\0";
 
-// }
+    // 3: KKS ← generateKey()
+    //    KKS used to encrypt FKS, the encrypted file with PGP data
+    char KKS[KEY_LEN];
+    generateKey(KKS, KEY_LEN);
 
+    // 5: fKS ← Storage.create(FKS)
+    //    write FKS (encrypted PGP auth data) into storage
+    char FKS[FILE_NAME_LEN] = "filename_of_key_store_file\0";
+    unsigned int FKSLen = strlen(FKS);
 
+    // 6: salt ← generateSalt()
+    unsigned int salt = generateSalt();
 
-// TODO: move this to a test file, had issues doing this first time
-//       with imports of libretroshare/src/util/rsaes.h
+    // 8: KLI ← KDF(salt,passwd)
+    //    keyDerivationFunction() uses SHA1 to generate KLI from salt and password
+    char KLI[SHA_DIGEST_LENGTH];
+    memset(KLI, '\0', SHA_DIGEST_LENGTH);
+    keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
+
+    // 9: KW ← generateKey() // suitable for the storage system
+    char KW[KEY_LEN];
+    generateKey(KW, KEY_LEN);
+
+    // 10: FLI ← salt||encrypt(KLI) (fKS||KKS||KW ||devmap)
+    char packedMetadataBuff[METADATA_SIZE];
+    memset(packedMetadataBuff, '\0', METADATA_SIZE);
+    unsigned int metadataLen = METADATA_SIZE;
+
+    packMedataDataFile(salt,
+                       KLI, SHA_DIGEST_LENGTH,
+                       FKS, FKSLen,
+                       KKS, KEY_LEN,
+                       KW, KEY_LEN,
+                       packedMetadataBuff, metadataLen);
+
+    // vars to store unpacked data
+    unsigned int upSalt = 0;
+    char upFKS[FILE_NAME_LEN];
+    unsigned int upFKSLen = 0;
+    char upKKS[KEY_LEN];
+    unsigned int upKKSLen = 0;
+    char upKW[KEY_LEN];
+    unsigned int upKWLen = 0;
+
+    unpackMetaDataFile(password, PASSWORD_LEN,
+                       packedMetadataBuff, metadataLen,
+                       upSalt,
+                       upFKS, upFKSLen,
+                       upKKS, upKKSLen,
+                       upKW, upKWLen);
+
+    assert(salt == upSalt);
+
+    assert(memcmp(FKS, upFKS, upFKSLen) == 0);
+    assert(FKSLen == upFKSLen);
+
+    assert(memcmp(KKS, upKKS, KEY_LEN) == 0);
+    assert(KEY_LEN == upKKSLen);
+
+    assert(memcmp(KW, upKW, upKWLen) == 0);
+    assert(KEY_LEN == upKWLen);
+}
+
 void test_crypto()
 {
     char Kx1[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
@@ -93,4 +167,11 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     // printf("--3. decryptedData(%d):\n[%s]\n", decryptedDataLen, decryptedData);
 
     assert(strcmp(Kx1, decryptedData) == 0);
+}
+
+int main(int argc, char **argv)
+{
+    test_readWriteArray();
+    test_crypto();
+    test_packUnpackMetadata();
 }
