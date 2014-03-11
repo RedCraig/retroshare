@@ -6,6 +6,9 @@
  * TODO: Currently writes to disk, update to use DHT.
 */
 
+#ifndef STORAGE_H
+#define STORAGE_H
+
 // write data to disk.
 void writeFileToDisk(char* data, int dataLen, char* filename, int filenameLen);
 
@@ -25,3 +28,4 @@ void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
 // bufLen[out] the length of the data that was written to buf
 void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen);
 
+#endif //STORAGE_H
