@@ -20,8 +20,10 @@
 //      file back from the DHT and the lengths are unknown.
 
 #include "PasswordAuth.h"
-#include "Storage.cc"
-#include "AuthCryptoFns.cc"
+#include "Storage.h"
+#include "AuthCryptoFns.h"
+#include "tests.cc"
+#include <openssl/sha.h>
 
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
@@ -142,8 +144,10 @@ void registerAccount(char* username, unsigned int usernameLen,
     writeMetadataFile(metadataBuff, metadataLen,
                       metadataFilename, FILE_NAME_LEN);
 
-
+    // TODO:
     // 12: while DHT.put(uname, fLI) fails
+
+
     // 13: uname ← User.input(“Choose new username:”)
     // 14: end while
 
@@ -306,7 +310,12 @@ void interactiveLogin(char* username,
     unsigned int metadataFileLen = METADATA_SIZE;
     readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
 
-
+    // 12:   salt ← FLI.salt // stored in plaintext
+    // salt = getSalt(FLI);
+    // 13:   KLI ← KDF(salt, passwd)
+    // KLI = KDF(salt, passwd);
+    // 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
+    // decryptKLI (FLI, fKS, KKS, KW);
     unsigned int salt = 0;
     char FKS[FKS_ENCRYPTED_DATA_LEN];
     unsigned int FKSLen = 0;
@@ -320,13 +329,6 @@ void interactiveLogin(char* username,
                        FKS, FKSLen,
                        KKS, KKSLen,
                        KW, KWLen);
-
-    // 12:   salt ← FLI.salt // stored in plaintext
-    // salt = getSalt(FLI);
-    // 13:   KLI ← KDF(salt, passwd)
-    // KLI = KDF(salt, passwd);
-    // 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
-    // decryptKLI (FLI, fKS, KKS, KW);
 }
 
 // Algorithm 2 Login
@@ -347,36 +349,3 @@ void interactiveLogin(char* username,
 // 24:   FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
 // 25:   Storage.write(fLI,FLI) // using KW
 // 26: end if
-
-
-void test_readWriteArray()
-{
-    // test write and read array work together.
-    // char* writeArray(const char* const data, const unsigned int dataLen,
-    //              char* const outbuf, unsigned int usedOutBufLen)
-
-    // const char* readArray(const char* const data,
-    //                       char* const outbuf,
-    //                       unsigned int &usedOutBufLen)
-
-    // write two arrays to outbuf
-    char data1[256] = "hello i am a data buffer, please treat me carefully.\0";
-    char data2[256] = "i am the second data buffer.\0";
-    char outbuf[1024];
-    char* outbufPtr = outbuf;
-    memset(outbuf, '\0', 1024);
-    unsigned int usedOutbufLen = 0;
-    outbufPtr = writeArray(data1, strlen(data1)+1, outbufPtr, usedOutbufLen);
-    outbufPtr = writeArray(data2, strlen(data2)+1, outbufPtr, usedOutbufLen);
-
-    // now read both arrays back and compare
-    const char* readOutbufPtr = outbuf;
-    char readData1[256];
-    char readData2[256];
-    unsigned int usedReadLen = 0;
-    readOutbufPtr = readArray(readOutbufPtr, readData1, usedReadLen);
-    readOutbufPtr = readArray(readOutbufPtr, readData2, usedReadLen);
-
-    assert(strcmp(data1, readData1) == 0);
-    assert(strcmp(data2, readData2) == 0);
-}
