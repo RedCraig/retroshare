@@ -19,9 +19,6 @@
 //      buffer so that this code can correctly deserialize them when reading the
 //      file back from the DHT and the lengths are unknown.
 
-// #include <stdio.h>
-// #include <string.h>
-
 #include "PasswordAuth.h"
 #include "Storage.cc"
 #include "AuthCryptoFns.cc"
@@ -39,6 +36,8 @@
 bool auth()
 {
     test_crypto();
+    test_readWriteArray();
+
     std::ifstream random("/dev/urandom", std::ios_base::in);
 
     char username[USERNAME_LEN] = "my name";
@@ -130,12 +129,12 @@ void registerAccount(char* username, unsigned int usernameLen,
     unsigned int metadataLen = METADATA_SIZE;
     // TODO: Could make a class for the metadata file, which handled (de)serialise
     //       It could also have a DHT write fn.
-    assembleMedataDataFile(salt,
-                           KLI, SHA_DIGEST_LENGTH,
-                           filenameFKS, FILE_NAME_LEN,
-                           KKS, KEY_LEN,
-                           KW, KEY_LEN,
-                           metadataBuff, metadataLen);
+    packMedataDataFile(salt,
+                       KLI, SHA_DIGEST_LENGTH,
+                       filenameFKS, FILE_NAME_LEN,
+                       KKS, KEY_LEN,
+                       KW, KEY_LEN,
+                       metadataBuff, metadataLen);
     // metadataLen is now the length of the metadata buffer
 
     // 11: fLI ← Storage.create(FLI)
@@ -153,43 +152,78 @@ void registerAccount(char* username, unsigned int usernameLen,
     printf("end!\n");
 }
 
-void assembleMedataDataFile(unsigned int salt,
-                            unsigned char* KLI, unsigned int KLILen,
-                            char* filenameFKS, unsigned int filenameLen,
-                            char* KKS, unsigned int KKSLen,
-                            char* KW, unsigned int KWLen,
-                            char* outbuf, unsigned int &outbufLen)
+void packMedataDataFile(unsigned int salt,
+                        unsigned char* KLI, unsigned int KLILen,
+                        char* filenameFKS, unsigned int filenameLen,
+                        char* KKS, unsigned int KKSLen,
+                        char* KW, unsigned int KWLen,
+                        char* outbuf, unsigned int &outbufLen)
 {
     // prefix the salt
     // concatenate the data for the metadata file
     // encrypt the data
 
+    // concatenate the data for the metadata file into dataBuffer
+    char dataBuffer[outbufLen];
+    char* dataBuffPtr = dataBuffer;
+    unsigned int usedDataBuffLen = 0;
+
     // prefix the salt
+    unsigned int usedOutBuffLen = 0;
     memcpy(outbuf, &salt, sizeof(salt));
+    usedOutBuffLen += sizeof(salt);
 
-    // concatenate the data for the metadata file
-    char temp[outbufLen];
+    // write the arrays to the databuffer
+    dataBuffPtr = writeArray(filenameFKS, filenameLen, dataBuffPtr, usedDataBuffLen);
+    dataBuffPtr = writeArray(KKS, KKSLen, dataBuffPtr, usedDataBuffLen);
+    dataBuffPtr = writeArray(KW, KWLen, dataBuffPtr, usedDataBuffLen);
 
-    memcpy(temp, filenameFKS, filenameLen);
-    unsigned int usedBufLen = filenameLen;
-
-    memcpy(temp+usedBufLen, KKS, KKSLen);
-    usedBufLen += KKSLen;
-
-    memcpy(temp+usedBufLen, KW, KWLen);
-    usedBufLen += KWLen;
-
-    // temp[usedBufLen]
-    memcpy(outbuf+sizeof(salt), temp, outbufLen);
-    unsigned int metadatalen = outbufLen-sizeof(salt);
-    encrypt((char*)KLI, temp, usedBufLen,
-            outbuf+sizeof(salt), metadatalen);
-
-    outbufLen = metadatalen;
+    // encrypt the databuffer straight into outbuf
+    encrypt((char*)KLI, dataBuffer, usedDataBuffLen,
+            outbuf+sizeof(salt), outbufLen);
+    usedOutBuffLen += outbufLen;
 }
 
-void interactiveLogin()
+// Writes data array into outbuf. Data format is:
+// [dataLen, [data]]
+// Returns a pointer to the end of where this fn has written to in outbuf.
+char* writeArray(const char* const data, const unsigned int dataLen,
+                 char* const outbuf, unsigned int usedOutBufLen)
 {
+    char* outbufPtr = outbuf;
+
+    // write int: length of buffer
+    memcpy(outbufPtr, reinterpret_cast<char*>(dataLen), sizeof(dataLen));
+    outbufPtr += sizeof(dataLen);
+    usedOutBufLen += sizeof(dataLen);
+
+    // write char*: the buffer
+    memcpy(outbufPtr, data, dataLen);
+    outbufPtr += dataLen;
+    usedOutBufLen += dataLen;
+
+    return outbufPtr;
+}
+
+// reads the array in data into outbuf. data format is expected to be:
+// [charDataLen, [char data]]
+// Returns a pointer to the end of where this fn has read to in outbuf.
+const char* readArray(const char* const data,
+                      char* const outbuf,
+                      unsigned int &usedOutBufLen)
+{
+    const char* dataPtr = &(*data);
+
+    // read int: length of buffer
+    unsigned int arrayLen = data[0];
+    dataPtr += sizeof(arrayLen);
+
+    // read the char array into outbuf
+    memcpy(outbuf, dataPtr, arrayLen);
+    usedOutBufLen = arrayLen;
+
+    return dataPtr;
+}
 
 /*
 Algorithm 2 Login
@@ -198,16 +232,7 @@ Algorithm 2 Login
 3: FDL ← Storage.read(fDL)
 4: fKS, KKS ← decryptKDL(FDL)
 5: saveLoginLocally ← False
-6: else // interactive login
-7: uname ← User.input(“Enter username:”)
-8: passwd ← User.input(“Enter password:”)
-9: saveLoginLocally ← User.input(“Remember?”)
-10: fLI ← DHT.get(uname)
-11: FLI ← Storage.read(fLI)
-12: salt ← FLI.salt // stored in plaintext
-13: KLI ← KDF(salt,passwd)
-14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
-15: end if
+6-15: interactiveLogin()
 16: FKS ← Storage.read(fKS)
 17: Kx1, Kx2,... ← decryptKKS (FKS)
 18: if saveLoginLocally then
@@ -220,21 +245,29 @@ Algorithm 2 Login
 25: Storage.write(fLI,FLI) // using KW
 26: end if
 */
+void interactiveLogin(char* username,
+                      char* password, unsigned int passwordLen)
+{
+    // 10:   fLI ← DHT.get(uname)
+    // fLI = storage.get(filename);
+    // fLI is the metadata file name
+    char metadataFileName[FILE_NAME_LEN];
+    memset(metadataFileName, '\0', FILE_NAME_LEN);
+    readFile(username, metadataFileName, FILE_NAME_LEN);
 
+    // 11:   FLI ← Storage.read(fLI)
+    // FLI = storage.get(fLI);
+    // FLI is the metadata file
+    char metadataFile[METADATA_SIZE];
+    memset(metadataFile, '\0', METADATA_SIZE);
+    readFile(metadataFileName, metadataFile, METADATA_SIZE);
 
-// 6: else // interactive login
-// 7:    uname ← User.input(“Enter username:”)
-// 8:    passwd ← User.input(“Enter password:”)
-// 9:    saveLoginLocally ← User.input(“Remember?”)
-// 10:   fLI ← DHT.get(uname)
-// 11:   FLI ← Storage.read(fLI)
-// 12:   salt ← FLI.salt // stored in plaintext
-// 13:   KLI ← KDF(salt,passwd)
-// 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
-// 15: end if
-
-
-
+    // 12:   salt ← FLI.salt // stored in plaintext
+    // salt = getSalt(FLI);
+    // 13:   KLI ← KDF(salt, passwd)
+    // KLI = KDF(salt, passwd);
+    // 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
+    // decryptKLI (FLI, fKS, KKS, KW);
 }
 
 // Algorithm 2 Login
@@ -255,3 +288,36 @@ Algorithm 2 Login
 // 24:   FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
 // 25:   Storage.write(fLI,FLI) // using KW
 // 26: end if
+
+
+bool test_readWriteArray()
+{
+    // test write and read array work together.
+    // char* writeArray(const char* const data, const unsigned int dataLen,
+    //              char* const outbuf, unsigned int usedOutBufLen)
+
+    // const char* readArray(const char* const data,
+    //                       char* const outbuf,
+    //                       unsigned int &usedOutBufLen)
+
+    // write two arrays to outbuf
+    char data1[256] = "hello i am a data buffer, please treat me carefully.\0";
+    char data2[256] = "i am the second data buffer.\0";
+    char outbuf[1024];
+    char* outbufPtr = outbuf;
+    memset(outbuf, '\0', 1024);
+    unsigned int usedOutbufLen = 0;
+    outbufPtr = writeArray(data1, strlen(data1), outbufPtr, usedOutbufLen);
+    outbufPtr = writeArray(data2, strlen(data2), outbufPtr, usedOutbufLen);
+
+    // now read both arrays back and compare
+    const char* readOutbufPtr = outbuf;
+    char readData1[256];
+    char readData2[256];
+    unsigned int usedReadLen = 0;
+    readOutbufPtr = readArray(readOutbufPtr, readData1, usedReadLen);
+    readOutbufPtr = readArray(readOutbufPtr, readData2, usedReadLen);
+
+    assert(strcmp(data1, readData1) == 0);
+    assert(strcmp(data2, readData2) == 0);
+}

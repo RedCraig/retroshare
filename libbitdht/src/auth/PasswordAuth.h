@@ -15,21 +15,32 @@ void registerAccount(char* username, unsigned int usernameLen,
                      char* pgpkey, unsigned int pgpkeyLen);
 
 // Login
-void login(char* username, unsigned int usernameLen,
-           char* password, unsigned int passwordLen);
+void interactiveLogin(char* username, unsigned int usernameLen,
+                      char* password, unsigned int passwordLen);
 
 // Assemble the metadata file, concatenates filenameFKS, KKS and KW into
 // a single buffer then encrypts that buffer using KLI as the hash.
 // Prefixes the buffer with the salt.
 // Puts the final data into outbuf.
-void assembleMedataDataFile(unsigned int salt,
-                            unsigned char* KLI, unsigned int KLILen,
-                            char* filenameFKS, unsigned int filenameLen,
-                            char* KKS, unsigned int KKSLen,
-                            char* KW, unsigned int KWLen,
-                            char* outbuf, unsigned int &outbufLen);
+void packMedataDataFile(unsigned int salt,
+                        unsigned char* KLI, unsigned int KLILen,
+                        char* filenameFKS, unsigned int filenameLen,
+                        char* KKS, unsigned int KKSLen,
+                        char* KW, unsigned int KWLen,
+                        char* outbuf, unsigned int &outbufLen);
 
+// Writes data array into outbuf. Data format is:
+// [dataLen, [byte data]]
+char* writeArray(const char* const data, const unsigned int dataLen,
+                 char* const outbuf, unsigned int usedOutBufLen);
 
+// reads the array in data into outbuf. data format is expected to be:
+// [dataLen, [byte data]]
+const char* readArray(const char* const data,
+                      char* const outbuf,
+                      unsigned int &usedOutBufLen);
+
+bool test_readWriteArray();
 
 /*
 Algorithm 1 Account Registration
