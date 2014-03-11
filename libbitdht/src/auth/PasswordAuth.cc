@@ -182,12 +182,12 @@ void packMedataDataFile(unsigned int salt,
     usedOutBuffLen += outbufLen;
 }
 
-void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
-                          const char* const data, const unsigned int dataLen,
-                          unsigned int &salt,
-                          char* FKS, unsigned int &FKSLen,
-                          char* KKS, unsigned int &KKSLen,
-                          char* KW, unsigned int &KWLen)
+void unpackMetaDataFile(const char* const password, const unsigned int passwordLen,
+                        const char* const data, const unsigned int dataLen,
+                        unsigned int &salt,
+                        char* FKS, unsigned int &FKSLen,
+                        char* KKS, unsigned int &KKSLen,
+                        char* KW, unsigned int &KWLen)
 {
     // prefix the salt
     // concatenate the data for the metadata file
@@ -295,14 +295,31 @@ void interactiveLogin(char* username,
     // fLI is the metadata file name
     char metadataFileName[FILE_NAME_LEN];
     memset(metadataFileName, '\0', FILE_NAME_LEN);
-    readFile(username, metadataFileName, FILE_NAME_LEN);
+    unsigned int filenameLen = FILE_NAME_LEN;
+    readFileFromDisk(username, metadataFileName, filenameLen);
 
     // 11:   FLI ← Storage.read(fLI)
     // FLI = storage.get(fLI);
     // FLI is the metadata file
     char metadataFile[METADATA_SIZE];
     memset(metadataFile, '\0', METADATA_SIZE);
-    readFile(metadataFileName, metadataFile, METADATA_SIZE);
+    unsigned int metadataFileLen = METADATA_SIZE;
+    readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
+
+
+    unsigned int salt = 0;
+    char FKS[FKS_ENCRYPTED_DATA_LEN];
+    unsigned int FKSLen = 0;
+    char KKS[KEY_LEN];
+    unsigned int KKSLen = 0;
+    char KW[KEY_LEN];
+    unsigned int KWLen = 0;
+    unpackMetaDataFile(password, passwordLen,
+                       metadataFile, metadataFileLen,
+                       salt,
+                       FKS, FKSLen,
+                       KKS, KKSLen,
+                       KW, KWLen);
 
     // 12:   salt ← FLI.salt // stored in plaintext
     // salt = getSalt(FLI);
