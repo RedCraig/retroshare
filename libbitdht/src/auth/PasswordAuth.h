@@ -29,6 +29,16 @@ void packMedataDataFile(unsigned int salt,
                         char* KW, unsigned int KWLen,
                         char* outbuf, unsigned int &outbufLen);
 
+// Given a password and buffer data, unpack the buffer and decrypt the content
+// into their respective buffers.
+void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
+                          const char* const data, const unsigned int dataLen,
+                          unsigned int &salt,
+                          unsigned char* KLI, unsigned int &KLILen,
+                          char* FKS, unsigned int &FKSLen,
+                          char* KKS, unsigned int &KKSLen,
+                          char* KW, unsigned int &KWLen);
+
 // Writes data array into outbuf. Data format is:
 // [dataLen, [byte data]]
 char* writeArray(const char* const data, const unsigned int dataLen,
@@ -40,7 +50,7 @@ const char* readArray(const char* const data,
                       char* const outbuf,
                       unsigned int &usedOutBufLen);
 
-bool test_readWriteArray();
+void test_readWriteArray();
 
 /*
 Algorithm 1 Account Registration

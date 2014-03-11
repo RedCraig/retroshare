@@ -182,9 +182,55 @@ void packMedataDataFile(unsigned int salt,
     usedOutBuffLen += outbufLen;
 }
 
-// Writes data array into outbuf. Data format is:
-// [dataLen, [data]]
-// Returns a pointer to the end of where this fn has written to in outbuf.
+void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
+                          const char* const data, const unsigned int dataLen,
+                          unsigned int &salt,
+                          unsigned char* KLI, unsigned int &KLILen,
+                          char* FKS, unsigned int &FKSLen,
+                          char* KKS, unsigned int &KKSLen,
+                          char* KW, unsigned int &KWLen)
+{
+    // prefix the salt
+    // concatenate the data for the metadata file
+    // encrypt the data
+
+    const char* dataPtr = data;
+    unsigned int readData = 0;
+
+    // read salt
+    memcpy(&salt, data, sizeof(salt));
+    readData += sizeof(salt);
+    dataPtr += sizeof(salt);
+
+    // read the encrypted array
+    // TODO: Fix this, encArry will be less than METADATA_SIZE,
+    //       but the ideal(?) might be reading the length,
+    //       then allocating a buffer to read the rest of the data into.
+    char encArray[METADATA_SIZE];
+    unsigned int encArrayLen = 0;
+    readArray(dataPtr, encArray, encArrayLen);
+
+    // Using the password and the salt which we just read,
+    // get the key.
+    unsigned char KLI[SHA_DIGEST_LENGTH];
+    memset(KLI, '\0', SHA_DIGEST_LENGTH);
+    keyDerivationFunction(salt, password, passwordLen, KLI, SHA_DIGEST_LENGTH);
+
+    // Use the key to decrypt the encoded buffer
+    // TODO: Fix this, encArry will be less than METADATA_SIZE,
+    //       but the ideal(?) might be reading the length,
+    //       then allocating a buffer to read the rest of the data into.
+    char decArray[METADATA_SIZE];
+    unsigned int decArrayLen = 0;
+    decrypt(KLI, encArray, encArrayLen, decArray, decArrayLen);
+
+    // now read FKS, KKS and KW from the decrypted array decArrayLen
+    char* decArrayPtr = decArray;
+    decArrayPtr = readArray(decArrayPtr, FKS, FKSLen);
+    decArrayPtr = readArray(decArrayPtr, KKS, KKSLen);
+    decArrayPtr = readArray(decArrayPtr, KW, KWLen);
+}
+
 char* writeArray(const char* const data, const unsigned int dataLen,
                  char* const outbuf, unsigned int usedOutBufLen)
 {
@@ -193,8 +239,6 @@ char* writeArray(const char* const data, const unsigned int dataLen,
     // write int: length of buffer
     memcpy(outbufPtr, &dataLen, sizeof(dataLen));
     outbufPtr += sizeof(dataLen);
-
-
     usedOutBufLen += sizeof(dataLen);
 
     // write char*: the buffer
@@ -205,9 +249,6 @@ char* writeArray(const char* const data, const unsigned int dataLen,
     return outbufPtr;
 }
 
-// reads the array in data into outbuf. data format is expected to be:
-// [charDataLen, [char data]]
-// Returns a pointer to the end of where this fn has read to in outbuf.
 const char* readArray(const char* const data,
                       char* const outbuf,
                       unsigned int &usedOutBufLen)
@@ -292,7 +333,7 @@ void interactiveLogin(char* username,
 // 26: end if
 
 
-bool test_readWriteArray()
+void test_readWriteArray()
 {
     // test write and read array work together.
     // char* writeArray(const char* const data, const unsigned int dataLen,
