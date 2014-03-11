@@ -23,7 +23,7 @@ void interactiveLogin(char* username, unsigned int usernameLen,
 // Prefixes the buffer with the salt.
 // Puts the final data into outbuf.
 void packMedataDataFile(unsigned int salt,
-                        unsigned char* KLI, unsigned int KLILen,
+                        char* KLI, unsigned int KLILen,
                         char* filenameFKS, unsigned int filenameLen,
                         char* KKS, unsigned int KKSLen,
                         char* KW, unsigned int KWLen,
@@ -34,7 +34,6 @@ void packMedataDataFile(unsigned int salt,
 void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
                           const char* const data, const unsigned int dataLen,
                           unsigned int &salt,
-                          unsigned char* KLI, unsigned int &KLILen,
                           char* FKS, unsigned int &FKSLen,
                           char* KKS, unsigned int &KKSLen,
                           char* KW, unsigned int &KWLen);

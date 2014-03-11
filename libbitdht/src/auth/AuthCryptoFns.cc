@@ -95,8 +95,9 @@ unsigned int generateSalt()
     return salt;
 }
 
-void keyDerivationFunction(unsigned int salt, char* password, int passwordLen,
-                           unsigned char* key, int keylen)
+void keyDerivationFunction(const unsigned int salt,
+                           const char* const password, const int passwordLen,
+                           char* key, int keylen)
 {
     // Object to hold the current state of the hash
     SHA_CTX ctx;
@@ -106,7 +107,7 @@ void keyDerivationFunction(unsigned int salt, char* password, int passwordLen,
     // SHA1_Update(&ctx, "hell", 4);
     SHA1_Update(&ctx, password, passwordLen);
     // unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA1_Final(key, &ctx);
+    SHA1_Final(reinterpret_cast<unsigned char*>(key), &ctx);
 }
 
 

@@ -106,7 +106,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     // 7: devmap ← createMap()
     // 8: KLI ← KDF(salt,passwd)
     //    keyDerivationFunction() uses SHA1 to generate KLI from salt and password
-    unsigned char KLI[SHA_DIGEST_LENGTH];
+    char KLI[SHA_DIGEST_LENGTH];
     memset(KLI, '\0', SHA_DIGEST_LENGTH);
     keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
     std::cout << "8: KLI ← KDF(salt,passwd)" << KLI << std::endl;
@@ -151,7 +151,7 @@ void registerAccount(char* username, unsigned int usernameLen,
 }
 
 void packMedataDataFile(unsigned int salt,
-                        unsigned char* KLI, unsigned int KLILen,
+                        char* KLI, unsigned int KLILen,
                         char* filenameFKS, unsigned int filenameLen,
                         char* KKS, unsigned int KKSLen,
                         char* KW, unsigned int KWLen,
@@ -185,7 +185,6 @@ void packMedataDataFile(unsigned int salt,
 void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
                           const char* const data, const unsigned int dataLen,
                           unsigned int &salt,
-                          unsigned char* KLI, unsigned int &KLILen,
                           char* FKS, unsigned int &FKSLen,
                           char* KKS, unsigned int &KKSLen,
                           char* KW, unsigned int &KWLen)
@@ -212,7 +211,7 @@ void unpackMedataDataFile(const char* const password, const unsigned int passwor
 
     // Using the password and the salt which we just read,
     // get the key.
-    unsigned char KLI[SHA_DIGEST_LENGTH];
+    char KLI[SHA_DIGEST_LENGTH];
     memset(KLI, '\0', SHA_DIGEST_LENGTH);
     keyDerivationFunction(salt, password, passwordLen, KLI, SHA_DIGEST_LENGTH);
 
@@ -225,7 +224,7 @@ void unpackMedataDataFile(const char* const password, const unsigned int passwor
     decrypt(KLI, encArray, encArrayLen, decArray, decArrayLen);
 
     // now read FKS, KKS and KW from the decrypted array decArrayLen
-    char* decArrayPtr = decArray;
+    const char* decArrayPtr = decArray;
     decArrayPtr = readArray(decArrayPtr, FKS, FKSLen);
     decArrayPtr = readArray(decArrayPtr, KKS, KKSLen);
     decArrayPtr = readArray(decArrayPtr, KW, KWLen);

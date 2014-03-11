@@ -37,8 +37,9 @@ unsigned int generateSalt();
 // Uses salt + password to generate a key.
 // key[out] - buffer that the key is put into
 // keylen[out] - length of key in buffer
-void keyDerivationFunction(unsigned int salt, char* password, int passwordLen,
-                           unsigned char* key, int keylen);
+void keyDerivationFunction(const unsigned int salt,
+                           const char* const password, const int passwordLen,
+                           char* key, int keylen);
 
 // Test fn which encrypts and decrypts to verify what goes in comes back out.
 void test_crypto();
