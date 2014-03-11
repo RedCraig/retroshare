@@ -13,7 +13,7 @@ release {
 	# not much here yet.
 }
 
-#CONFIG += debug
+CONFIG += debug
 debug {
         QMAKE_CXXFLAGS -= -O2 -fomit-frame-pointer
         QMAKE_CXXFLAGS *= -g -fno-omit-frame-pointer
@@ -132,6 +132,9 @@ HEADERS += \
 	bitdht/bdquerymgr.h	\
 	util/bdbloom.h		\
 	bitdht/bdfriendlist.h	\
+	auth/PasswordAuth.h \
+	auth/AuthCryptoFns.h \
+	auth/Storage.h \
 
 SOURCES += \
 	bitdht/bencode.c	\
@@ -160,5 +163,7 @@ SOURCES += \
 	util/bdbloom.cc		\
 	bitdht/bdfriendlist.cc	\
 	auth/PasswordAuth.cc \
+	auth/AuthCryptoFns.cc \
+	auth/Storage.cc \
 
 
