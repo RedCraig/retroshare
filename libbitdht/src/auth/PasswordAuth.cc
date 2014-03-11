@@ -38,8 +38,6 @@ bool auth()
     test_crypto();
     test_readWriteArray();
 
-    std::ifstream random("/dev/urandom", std::ios_base::in);
-
     char username[USERNAME_LEN] = "my name";
     char password[PASSWORD_LEN] = "my password";
     // TODO: add private part of pgp key here?
@@ -193,8 +191,10 @@ char* writeArray(const char* const data, const unsigned int dataLen,
     char* outbufPtr = outbuf;
 
     // write int: length of buffer
-    memcpy(outbufPtr, reinterpret_cast<char*>(dataLen), sizeof(dataLen));
+    memcpy(outbufPtr, &dataLen, sizeof(dataLen));
     outbufPtr += sizeof(dataLen);
+
+
     usedOutBufLen += sizeof(dataLen);
 
     // write char*: the buffer
@@ -215,12 +215,14 @@ const char* readArray(const char* const data,
     const char* dataPtr = &(*data);
 
     // read int: length of buffer
-    unsigned int arrayLen = data[0];
+    unsigned int arrayLen = 0;
+    memcpy(&arrayLen, data, sizeof(arrayLen));
     dataPtr += sizeof(arrayLen);
 
     // read the char array into outbuf
     memcpy(outbuf, dataPtr, arrayLen);
     usedOutBufLen = arrayLen;
+    dataPtr += arrayLen;
 
     return dataPtr;
 }
@@ -307,8 +309,8 @@ bool test_readWriteArray()
     char* outbufPtr = outbuf;
     memset(outbuf, '\0', 1024);
     unsigned int usedOutbufLen = 0;
-    outbufPtr = writeArray(data1, strlen(data1), outbufPtr, usedOutbufLen);
-    outbufPtr = writeArray(data2, strlen(data2), outbufPtr, usedOutbufLen);
+    outbufPtr = writeArray(data1, strlen(data1)+1, outbufPtr, usedOutbufLen);
+    outbufPtr = writeArray(data2, strlen(data2)+1, outbufPtr, usedOutbufLen);
 
     // now read both arrays back and compare
     const char* readOutbufPtr = outbuf;
