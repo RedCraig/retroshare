@@ -34,12 +34,12 @@ void packMedataDataFile(unsigned int salt,
 
 // Given a password and buffer data, unpack the buffer and decrypt the content
 // into their respective buffers.
-void unpackMedataDataFile(const char* const password, const unsigned int passwordLen,
-                          const char* const data, const unsigned int dataLen,
-                          unsigned int &salt,
-                          char* FKS, unsigned int &FKSLen,
-                          char* KKS, unsigned int &KKSLen,
-                          char* KW, unsigned int &KWLen);
+void unpackMetaDataFile(const char* const password, const unsigned int passwordLen,
+                        const char* const data, const unsigned int dataLen,
+                        unsigned int &salt,
+                        char* FKS, unsigned int &FKSLen,
+                        char* KKS, unsigned int &KKSLen,
+                        char* KW, unsigned int &KWLen);
 
 // Writes data array into outbuf. Data format is:
 // [dataLen, [byte data]]

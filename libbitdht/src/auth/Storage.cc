@@ -5,6 +5,7 @@
  * IO fns for auth.
 */
 #include <fstream>      // std::ifstream, std::ofstream
+#include <iostream>     // cout, endl
 #include "Storage.h"
 
 

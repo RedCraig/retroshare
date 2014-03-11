@@ -19,11 +19,15 @@
 //      buffer so that this code can correctly deserialize them when reading the
 //      file back from the DHT and the lengths are unknown.
 
+#include <stdio.h>  // printf
+#include <string.h> // memset
+#include <iostream>     // cout, endl
+
+#include <openssl/sha.h>
+
 #include "PasswordAuth.h"
 #include "Storage.h"
 #include "AuthCryptoFns.h"
-#include "tests.cc"
-#include <openssl/sha.h>
 
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
@@ -37,9 +41,6 @@
 
 bool auth()
 {
-    test_crypto();
-    test_readWriteArray();
-
     char username[USERNAME_LEN] = "my name";
     char password[PASSWORD_LEN] = "my password";
     // TODO: add private part of pgp key here?
@@ -79,7 +80,6 @@ void registerAccount(char* username, unsigned int usernameLen,
     // 3: KKS ← generateKey()
     //    KKS used to encrypt FKS, the encrypted file with PGP data
     char KKS[KEY_LEN];
-    memset(KKS, '\0', KEY_LEN);
     generateKey(KKS, KEY_LEN);
     printf("3: KKS ← generateKey()\n");
 
@@ -115,7 +115,6 @@ void registerAccount(char* username, unsigned int usernameLen,
 
     // 9: KW ← generateKey() // suitable for the storage system
     char KW[KEY_LEN];
-    memset(KW, '\0', KEY_LEN);
     generateKey(KW, KEY_LEN);
     std::cout << "9: KW ← generateKey()" << std::endl;
 
