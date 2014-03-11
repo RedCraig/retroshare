@@ -30,7 +30,7 @@ void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
     writeFileToDisk(metadataBuf, metadataLen, filename, filenameLen);
 }
 
-void readFile(char* filename, char* buf, const unsigned int bufLen)
+void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen)
 {
     unsigned int position = 0;
     std::ifstream infile(filename);
@@ -42,6 +42,7 @@ void readFile(char* filename, char* buf, const unsigned int bufLen)
             position++;
         }
         buf[position-1] = '\0';
+        bufLen = position;
     }
     else
     {

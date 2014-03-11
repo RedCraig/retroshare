@@ -21,4 +21,7 @@ void writeFKSFile(char* data, int dataLen, char* filename, int filenameLen);
 void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
                        char* filename, int filenameLen);
 
-void readFile(char* filename, char* buf, const unsigned int bufLen);
+// bufLen[in] the length of buf that can be used
+// bufLen[out] the length of the data that was written to buf
+void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen);
+
