@@ -163,6 +163,7 @@ void packMedataDataFile(unsigned int salt,
     // prefix the salt
     // concatenate the data for the metadata file
     // encrypt the data
+    char *outbufWritePtr = outbuf;
 
     // concatenate the data for the metadata file into dataBuffer
     char dataBuffer[outbufLen];
@@ -171,20 +172,26 @@ void packMedataDataFile(unsigned int salt,
 
     // prefix the salt
     unsigned int usedOutBuffLen = 0;
-    memcpy(outbuf, &salt, sizeof(salt));
+    memcpy(outbufWritePtr, &salt, sizeof(salt));
+    outbufWritePtr += sizeof(salt);
     usedOutBuffLen += sizeof(salt);
     outbufLen = outbufLen - sizeof(salt);
 
     // write the arrays to the databuffer
-
     dataBuffPtr = writeArray(filenameFKS, filenameLen, dataBuffPtr, usedDataBuffLen);
     dataBuffPtr = writeArray(KKS, KKSLen, dataBuffPtr, usedDataBuffLen);
     dataBuffPtr = writeArray(KW, KWLen, dataBuffPtr, usedDataBuffLen);
 
-    // encrypt the databuffer straight into outbuf
+    // encrypt into encDataBuffer
+    char encDataBuffer[outbufLen];
+    unsigned int encDataBufferLen = outbufLen;
     encrypt((char*)KLI, dataBuffer, usedDataBuffLen,
-            outbuf+sizeof(salt), outbufLen);
-    outbufLen = outbufLen + usedOutBuffLen;
+            encDataBuffer, encDataBufferLen);
+
+    // write (encDataBufferLen, [encDataBuffer]) to outbuf
+    writeArray(encDataBuffer, encDataBufferLen, outbufWritePtr, usedOutBuffLen);
+
+    outbufLen = usedOutBuffLen;
 }
 
 void unpackMetaDataFile(const char* const password, const unsigned int passwordLen,
@@ -225,7 +232,7 @@ void unpackMetaDataFile(const char* const password, const unsigned int passwordL
     //       but the ideal(?) might be reading the length,
     //       then allocating a buffer to read the rest of the data into.
     char decArray[METADATA_SIZE];
-    unsigned int decArrayLen = 0;
+    unsigned int decArrayLen = METADATA_SIZE;
     decrypt(KLI, encArray, encArrayLen, decArray, decArrayLen);
 
     // now read FKS, KKS and KW from the decrypted array decArrayLen
@@ -263,7 +270,7 @@ const char* readArray(const char* const data,
     unsigned int arrayLen = 0;
     memcpy(&arrayLen, data, sizeof(arrayLen));
     dataPtr += sizeof(arrayLen);
-    usedOutBufLen = usedOutBufLen + sizeof(arrayLen);
+    //usedOutBufLen = usedOutBufLen + sizeof(arrayLen);
 
     // read the char array into outbuf
     memcpy(outbuf, dataPtr, arrayLen);

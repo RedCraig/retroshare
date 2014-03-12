@@ -34,22 +34,28 @@ void test_readWriteArray()
     // write two arrays to outbuf
     char data1[256] = "hello i am a data buffer, please treat me carefully.\0";
     char data2[256] = "i am the second data buffer.\0";
+    unsigned int data1Len = strlen(data1)+1;
+    unsigned int data2Len = strlen(data2)+1;
     char outbuf[1024];
     char* outbufPtr = outbuf;
     memset(outbuf, '\0', 1024);
     unsigned int usedOutbufLen = 0;
-    outbufPtr = writeArray(data1, strlen(data1)+1, outbufPtr, usedOutbufLen);
-    outbufPtr = writeArray(data2, strlen(data2)+1, outbufPtr, usedOutbufLen);
+    outbufPtr = writeArray(data1, data1Len, outbufPtr, usedOutbufLen);
+    outbufPtr = writeArray(data2, data2Len, outbufPtr, usedOutbufLen);
 
     // now read both arrays back and compare
     const char* readOutbufPtr = outbuf;
     char readData1[256];
     char readData2[256];
-    unsigned int usedReadLen = 0;
-    readOutbufPtr = readArray(readOutbufPtr, readData1, usedReadLen);
-    readOutbufPtr = readArray(readOutbufPtr, readData2, usedReadLen);
+    unsigned int usedReadLen1 = 0;
+    unsigned int usedReadLen2 = 0;
+    readOutbufPtr = readArray(readOutbufPtr, readData1, usedReadLen1);
+    readOutbufPtr = readArray(readOutbufPtr, readData2, usedReadLen2);
 
-    assert(usedOutbufLen == usedReadLen);
+    assert(usedOutbufLen == usedReadLen1+usedReadLen2+4+4);
+    assert(data1Len == usedReadLen1);
+    assert(data2Len == usedReadLen2);
+
     assert(strcmp(data1, readData1) == 0);
     assert(strcmp(data2, readData2) == 0);
 }
@@ -66,7 +72,7 @@ void test_packUnpackMetadata()
     // 5: fKS ← Storage.create(FKS)
     //    write FKS (encrypted PGP auth data) into storage
     char FKS[FILE_NAME_LEN] = "filename_of_key_store_file\0";
-    unsigned int FKSLen = strlen(FKS);
+    unsigned int FKSLen = strlen(FKS)+1;
 
     // 6: salt ← generateSalt()
     unsigned int salt = generateSalt();
