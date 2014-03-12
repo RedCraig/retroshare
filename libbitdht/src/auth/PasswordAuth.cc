@@ -21,8 +21,7 @@
 
 #include <stdio.h>  // printf
 #include <string.h> // memset
-#include <iostream>     // cout, endl
-
+#include <iostream> // cout, endl
 #include <openssl/sha.h>
 
 #include "PasswordAuth.h"
@@ -41,8 +40,8 @@
 
 bool auth()
 {
-    char username[USERNAME_LEN] = "my name";
-    char password[PASSWORD_LEN] = "my password";
+    char username[USERNAME_LEN] = "my name\0";
+    char password[PASSWORD_LEN] = "my password\0";
     // TODO: add private part of pgp key here?
     char pgpkey[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
@@ -98,7 +97,8 @@ void registerAccount(char* username, unsigned int usernameLen,
     //    write FKS (encrypted PGP auth data) into storage
     char filenameFKS[FILE_NAME_LEN];
     memset(filenameFKS, '\0', FILE_NAME_LEN);
-    writeFKSFile(FKS, FKSEncryptedLen, filenameFKS, FILE_NAME_LEN);
+    unsigned int filenameFKSLen = FILE_NAME_LEN;
+    writeFKSFile(FKS, FKSEncryptedLen, filenameFKS, filenameFKSLen);
     std::cout << "5: fKS ← Storage.create(FKS)" << filenameFKS << std::endl;
 
     // 6: salt ← generateSalt()
@@ -140,11 +140,15 @@ void registerAccount(char* username, unsigned int usernameLen,
     //     using KW, write the fLI file to disk/storage/DHT
     char metadataFilename[FILE_NAME_LEN];
     memset(metadataFilename, '\0', FILE_NAME_LEN);
+    unsigned int metadataFilenameLen = FILE_NAME_LEN;
     writeMetadataFile(metadataBuff, metadataLen,
-                      metadataFilename, FILE_NAME_LEN);
+                      metadataFilename, metadataFilenameLen);
 
     // TODO:
     // 12: while DHT.put(uname, fLI) fails
+    // make sure username is null terminated
+    username[usernameLen] = '\0';
+    writeFileToDisk(metadataFilename, metadataFilenameLen, username);
 
 
     // 13: uname ← User.input(“Choose new username:”)
@@ -260,10 +264,6 @@ char* writeArray(const char* const data, const unsigned int dataLen,
     return outbufPtr;
 }
 
-// N.B.
-// usedOutBufLen[out] returns the length of the array data that was read
-//                    This does _not_ include the 4 bytes which it read from
-//                    buffer to deserialize the length of the array data.
 const char* readArray(const char* const data,
                       char* const outbuf,
                       unsigned int &usedOutBufLen)
