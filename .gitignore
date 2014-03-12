@@ -26,3 +26,4 @@ retroshare-gui/src/metadata.txt
 retroshare-gui/src/temp/
 libbitdht/dht_filename_for_fks.txt
 *password_auth_metadata.txt
+libbitdht/src/auth/tests
