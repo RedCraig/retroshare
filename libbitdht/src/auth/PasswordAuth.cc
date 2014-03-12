@@ -260,6 +260,10 @@ char* writeArray(const char* const data, const unsigned int dataLen,
     return outbufPtr;
 }
 
+// N.B.
+// usedOutBufLen[out] returns the length of the array data that was read
+//                    This does _not_ include the 4 bytes which it read from
+//                    buffer to deserialize the length of the array data.
 const char* readArray(const char* const data,
                       char* const outbuf,
                       unsigned int &usedOutBufLen)
