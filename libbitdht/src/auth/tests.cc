@@ -49,6 +49,7 @@ void test_readWriteArray()
     readOutbufPtr = readArray(readOutbufPtr, readData1, usedReadLen);
     readOutbufPtr = readArray(readOutbufPtr, readData2, usedReadLen);
 
+    assert(usedOutbufLen == usedReadLen);
     assert(strcmp(data1, readData1) == 0);
     assert(strcmp(data2, readData2) == 0);
 }
