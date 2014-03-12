@@ -19,11 +19,12 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
     - [Done] Encrypt concatenated data [salt||encrypt(KLI, (fKS||KKS||KW))] using using symmetric key KLI (aes encrypt/decrypt)
   - [Done] 11: fLI ← Storage.create(FLI) - using KW
            write the fLI file to disk/storage/DHT
-- test account creation
+  - [Done] 12: while DHT.put(uname, fLI) fails
+- [DOne] test account creation
   - [Done] test encrypt/decrypt input/output match (i.e. encrypt/decrypt do not mangle data)
-  - test keyDerivationFunction: KLI ← KDF(salt,passwd)
-  - move the test into a proper unittest
-    - I tried to already but hit issues with relative includes for the project.
+  - [Done] test keyDerivationFunction: KLI ← KDF(salt,passwd)
+  - [Done (sorta)] move the test into a proper unittest
+    - [Done] I tried to already but hit issues with relative includes for the project.
 - [Done] hook into retroshare main executable
 - implement login
   - 1: fDL, KDL ← Device.readLocalStore()
@@ -31,16 +32,13 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
   - 3: FDL ← Storage.read(fDL)
   - 4: fKS, KKS ← decryptKDL(FDL)
   - 5: saveLoginLocally ← False
-  - 6: else // interactive login
-  - 7: uname ← User.input(“Enter username:”)
-  - 8: passwd ← User.input(“Enter password:”)
-  - 9: saveLoginLocally ← User.input(“Remember?”)
-  - 10: fLI ← DHT.get(uname)
-  - 11: FLI ← Storage.read(fLI)
-  - 12: salt ← FLI.salt // stored in plaintext
-  - 13: KLI ← KDF(salt,passwd)
-  - 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
-  - 15: end if
+  - [Done] interactive login
+    - [Done] 10: fLI ← DHT.get(uname)
+    - [Done] 11: FLI ← Storage.read(fLI)
+    - [Done] decrypt metadata file
+      - [Done] 12: salt ← FLI.salt // stored in plaintext
+      - [Done] 13: KLI ← KDF(salt,passwd)
+      - [Done] 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
   - 16: FKS ← Storage.read(fKS)
   - 17: Kx1, Kx2,... ← decryptKKS (FKS)
   - 18: if saveLoginLocally then
