@@ -18,8 +18,19 @@ void registerAccount(char* username, unsigned int usernameLen,
                      char* pgpkey, unsigned int pgpkeyLen);
 
 // Login
-void interactiveLogin(char* username, unsigned int usernameLen,
+void interactiveLogin(char* username,
                       char* password, unsigned int passwordLen);
+
+void getMetadata(char* const metadataFileName,
+                 const char* const password,
+                 const unsigned int passwordLen,
+                 unsigned int &salt,
+                 char* const FKS,
+                 unsigned int &FKSLen,
+                 char* const KKS,
+                 unsigned int &KKSLen,
+                 char* const KW,
+                 unsigned int &KWLen);
 
 // Assemble the metadata file, concatenates filenameFKS, KKS and KW into
 // a single buffer then encrypts that buffer using KLI as the hash.

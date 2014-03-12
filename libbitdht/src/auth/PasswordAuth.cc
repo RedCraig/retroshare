@@ -110,7 +110,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     //    keyDerivationFunction() uses SHA1 to generate KLI from salt and password
     char KLI[SHA_DIGEST_LENGTH];
     memset(KLI, '\0', SHA_DIGEST_LENGTH);
-    keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
+    keyDerivationFunction(salt, password, passwordLen, KLI, SHA_DIGEST_LENGTH);
     std::cout << "8: KLI ← KDF(salt,passwd)" << KLI << std::endl;
 
     // 9: KW ← generateKey() // suitable for the storage system
@@ -144,7 +144,6 @@ void registerAccount(char* username, unsigned int usernameLen,
     writeMetadataFile(metadataBuff, metadataLen,
                       metadataFilename, metadataFilenameLen);
 
-    // TODO:
     // 12: while DHT.put(uname, fLI) fails
     // make sure username is null terminated
     username[usernameLen] = '\0';
@@ -308,27 +307,12 @@ void interactiveLogin(char* username,
                       char* password, unsigned int passwordLen)
 {
     // 10:   fLI ← DHT.get(uname)
-    // fLI = storage.get(filename);
-    // fLI is the metadata file name
+    // get metadata filename
     char metadataFileName[FILE_NAME_LEN];
     memset(metadataFileName, '\0', FILE_NAME_LEN);
     unsigned int filenameLen = FILE_NAME_LEN;
     readFileFromDisk(username, metadataFileName, filenameLen);
 
-    // 11:   FLI ← Storage.read(fLI)
-    // FLI = storage.get(fLI);
-    // FLI is the metadata file
-    char metadataFile[METADATA_SIZE];
-    memset(metadataFile, '\0', METADATA_SIZE);
-    unsigned int metadataFileLen = METADATA_SIZE;
-    readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
-
-    // 12:   salt ← FLI.salt // stored in plaintext
-    // salt = getSalt(FLI);
-    // 13:   KLI ← KDF(salt, passwd)
-    // KLI = KDF(salt, passwd);
-    // 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
-    // decryptKLI (FLI, fKS, KKS, KW);
     unsigned int salt = 0;
     char FKS[FKS_ENCRYPTED_DATA_LEN];
     unsigned int FKSLen = 0;
@@ -336,6 +320,35 @@ void interactiveLogin(char* username,
     unsigned int KKSLen = 0;
     char KW[KEY_LEN];
     unsigned int KWLen = 0;
+    getMetadata(metadataFileName, password, passwordLen, salt, FKS, FKSLen,
+                KKS, KKSLen, KW, KWLen);
+}
+
+void getMetadata(char* const metadataFileName,
+                 const char* const password,
+                 const unsigned int passwordLen,
+                 unsigned int &salt,
+                 char* const FKS,
+                 unsigned int &FKSLen,
+                 char* const KKS,
+                 unsigned int &KKSLen,
+                 char* const KW,
+                 unsigned int &KWLen)
+{
+    // 11:   FLI ← Storage.read(fLI)
+    // read metadata file
+    char metadataFile[METADATA_SIZE];
+    memset(metadataFile, '\0', METADATA_SIZE);
+    unsigned int metadataFileLen = METADATA_SIZE;
+    readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
+
+    // Decrypt and unpack metadata file
+    // 12:   salt ← FLI.salt
+    // salt = getSalt(FLI);
+    // 13:   KLI ← KDF(salt, passwd)
+    // KLI = KDF(salt, passwd);
+    // 14:   fKS, KKS, KW, devmap ← decryptKLI (FLI)
+    // decryptKLI (FLI, fKS, KKS, KW);
     unpackMetaDataFile(password, passwordLen,
                        metadataFile, metadataFileLen,
                        salt,

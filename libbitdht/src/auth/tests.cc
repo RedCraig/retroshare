@@ -13,6 +13,7 @@
 #include "Storage.h"
 #include "AuthCryptoFns.h"
 
+#define USERNAME_LEN 64
 #define PASSWORD_LEN 64
 #define KEY_LEN 16
 #define PGP_PUB_KEY_LEN 2048
@@ -24,7 +25,39 @@
 
 void test_registerAccount()
 {
-    auth();
+
+    char username[USERNAME_LEN] = "my name\0";
+    unsigned int usernameLen = 8;
+    char password[PASSWORD_LEN] = "my password";
+    unsigned int passwordLen = 11;
+    // TODO: add private part of pgp key here?
+    char pgpkey[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
+Version: OpenPGP:SDK v0.9\
+\
+xsBNBFMYXjUBCACdmfb/fC5u3/oIsbnpKXCqZk3OCx0YSiWAg2SeuyLPj1DES06W\
+Yx2eHs0ci7noO6aXbLf0f9+JIUSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
+tT1BM3JRvIIEBOSlgEKYzJxb0onX4vQ1J1/sQSi1lZUmy0O6svCNmqFg/Kt9Aa3S\
+gNaOeaPDr+hAoYpfyp7m5zYsA5r6Rex6O8qRzTqkTYEAtTq5jAms01YrtluD5GNB\
+RZuhiXNobfosBueYSuK5KlpOJczn8qViUSEPnybbodcZDZpmcdliyQoIqtJiVRny\
+5gMWn08vLkpX9gzz04gNLJvzHN7GWiiP7/G1ABEBAAHNJVJlZENyYWlnIChHZW5l\
+cmF0ZWQgYnkgUmV0cm9TaGFyZSkgPD7CwF8EEwECABMFAlMYXjUJEP3jPOYQGt7o\
+AhkBAACn6Af9GP/qezpV6+8uO7dcMCen4GwWcKR1OA3haL3KUc8II68aFOoct7qr\
+FsFOw6Cn378w3IC3gAGObUKpWYGU/7b6Gh1i6W6whYl7tWFLevhcSkU4fZF9X3PR\
+mgs8AiofnubevDGGH6M0YBBAnTdsrUtsm4HRDBMLpitt2SQCYc5gnAUuaCRY63Fg\
+Ax+P/Kldeso15+dlrpjGr5xZMDWEubWH2GpELJJSOb1CCC3rANcnxUT18kLFBB2K\
+jKSTD9ndswUv4mCH9DIaccfMHO0r2XjevAox7gJRGQpbr0wj79Wkb5JDb8z0PFcK\
+FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
+=2kN4\
+-----END PGP PUBLIC KEY BLOCK-----\
+--SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
+--LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
+\0";
+
+    registerAccount(username, usernameLen,
+                    password, passwordLen,
+                    pgpkey, PGP_KEY_LEN);
+
+    interactiveLogin(username, password, passwordLen);
 }
 
 void test_readWriteArray()
@@ -70,7 +103,8 @@ void test_packUnpackMetadata()
 {
     // Test that pack and then unpack give you the same set of data.
 
-    char password[PASSWORD_LEN] = "my password\0";
+    char password[PASSWORD_LEN] = "my password";
+    unsigned int passwordLen = 11;
 
     // 3: KKS ← generateKey()
     //    KKS used to encrypt FKS, the encrypted file with PGP data
@@ -89,7 +123,7 @@ void test_packUnpackMetadata()
     //    keyDerivationFunction() uses SHA1 to generate KLI from salt and password
     char KLI[SHA_DIGEST_LENGTH];
     memset(KLI, '\0', SHA_DIGEST_LENGTH);
-    keyDerivationFunction(salt, password, PASSWORD_LEN, KLI, SHA_DIGEST_LENGTH);
+    keyDerivationFunction(salt, password, passwordLen, KLI, SHA_DIGEST_LENGTH);
 
     // 9: KW ← generateKey() // suitable for the storage system
     char KW[KEY_LEN];
@@ -116,7 +150,7 @@ void test_packUnpackMetadata()
     char upKW[KEY_LEN];
     unsigned int upKWLen = 0;
 
-    unpackMetaDataFile(password, PASSWORD_LEN,
+    unpackMetaDataFile(password, passwordLen,
                        packedMetadataBuff, metadataLen,
                        upSalt,
                        upFKS, upFKSLen,
