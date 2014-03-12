@@ -44,7 +44,7 @@ void unpackMetaDataFile(const char* const password, const unsigned int passwordL
 // Writes data array into outbuf. Data format is:
 // [dataLen, [byte data]]
 char* writeArray(const char* const data, const unsigned int dataLen,
-                 char* const outbuf, unsigned int usedOutBufLen);
+                 char* const outbuf, unsigned int& usedOutBufLen);
 
 // reads the array in data into outbuf. data format is expected to be:
 // [dataLen, [byte data]]

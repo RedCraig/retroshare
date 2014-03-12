@@ -173,8 +173,10 @@ void packMedataDataFile(unsigned int salt,
     unsigned int usedOutBuffLen = 0;
     memcpy(outbuf, &salt, sizeof(salt));
     usedOutBuffLen += sizeof(salt);
+    outbufLen = outbufLen - sizeof(salt);
 
     // write the arrays to the databuffer
+
     dataBuffPtr = writeArray(filenameFKS, filenameLen, dataBuffPtr, usedDataBuffLen);
     dataBuffPtr = writeArray(KKS, KKSLen, dataBuffPtr, usedDataBuffLen);
     dataBuffPtr = writeArray(KW, KWLen, dataBuffPtr, usedDataBuffLen);
@@ -182,7 +184,7 @@ void packMedataDataFile(unsigned int salt,
     // encrypt the databuffer straight into outbuf
     encrypt((char*)KLI, dataBuffer, usedDataBuffLen,
             outbuf+sizeof(salt), outbufLen);
-    usedOutBuffLen += outbufLen;
+    outbufLen = outbufLen + usedOutBuffLen;
 }
 
 void unpackMetaDataFile(const char* const password, const unsigned int passwordLen,
@@ -234,19 +236,19 @@ void unpackMetaDataFile(const char* const password, const unsigned int passwordL
 }
 
 char* writeArray(const char* const data, const unsigned int dataLen,
-                 char* const outbuf, unsigned int usedOutBufLen)
+                 char* const outbuf, unsigned int& usedOutBufLen)
 {
     char* outbufPtr = outbuf;
 
     // write int: length of buffer
     memcpy(outbufPtr, &dataLen, sizeof(dataLen));
     outbufPtr += sizeof(dataLen);
-    usedOutBufLen += sizeof(dataLen);
+    usedOutBufLen = usedOutBufLen + sizeof(dataLen);
 
     // write char*: the buffer
     memcpy(outbufPtr, data, dataLen);
     outbufPtr += dataLen;
-    usedOutBufLen += dataLen;
+    usedOutBufLen = usedOutBufLen + dataLen;
 
     return outbufPtr;
 }
@@ -261,10 +263,11 @@ const char* readArray(const char* const data,
     unsigned int arrayLen = 0;
     memcpy(&arrayLen, data, sizeof(arrayLen));
     dataPtr += sizeof(arrayLen);
+    usedOutBufLen = usedOutBufLen + sizeof(arrayLen);
 
     // read the char array into outbuf
     memcpy(outbuf, dataPtr, arrayLen);
-    usedOutBufLen = arrayLen;
+    usedOutBufLen = usedOutBufLen + arrayLen;
     dataPtr += arrayLen;
 
     return dataPtr;
