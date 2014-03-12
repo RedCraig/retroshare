@@ -4,11 +4,13 @@ CXXFLAGS = -Wall -g -I..
 
 LIBS = -L../lib -lbitdht -lpthread -L../../../libretroshare/src/lib -lretroshare -lcrypto
 
-EXEC : tests
+EXEC = tests
 EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o tests.o
 
 all: tests
 
 tests: $(EGOBJ)
-	$(CXX) $(CXXFLAGS) -o tests $(EGOBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $(EXEC) $(EGOBJ) $(LIBS)
 
+clean:
+	rm -f $(EGOBJ) $(EXEC)
