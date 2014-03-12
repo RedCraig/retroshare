@@ -22,6 +22,11 @@
 #define METADATA_SIZE 1024*5
 
 
+void test_registerAccount()
+{
+    auth();
+}
+
 void test_readWriteArray()
 {
     // Test write and read array work together.
@@ -186,4 +191,5 @@ int main(int argc, char **argv)
     test_readWriteArray();
     test_crypto();
     test_packUnpackMetadata();
+    test_registerAccount();
 }
