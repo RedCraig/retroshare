@@ -19,8 +19,11 @@ void registerAccount(char* username, unsigned int usernameLen,
 
 // Login
 void interactiveLogin(char* username,
-                      char* password, unsigned int passwordLen);
+                      char* password, unsigned int passwordLen,
+                      char* const PGP, unsigned int &PGPLen);
 
+// loads metadata from disk
+// gets the salt, and decrypts the rest using KLI
 void getMetadata(char* const metadataFileName,
                  const char* const password,
                  const unsigned int passwordLen,
@@ -31,6 +34,12 @@ void getMetadata(char* const metadataFileName,
                  unsigned int &KKSLen,
                  char* const KW,
                  unsigned int &KWLen);
+
+// Reads key store file from disk, decrypts it using 'key' and returns contents
+// (which is the PGP key pair) in outbuf
+void getPGPKey(const char* const key,
+               const char* const filenameKS, const unsigned int filenameKSLen,
+               char* const outbuf, unsigned int &outbufLen);
 
 // Assemble the metadata file, concatenates filenameFKS, KKS and KW into
 // a single buffer then encrypts that buffer using KLI as the hash.

@@ -23,7 +23,7 @@ void writeFKSFile(char* data, int dataLen, char* filename,
 void writeFileToDisk(char* data, int dataLen, char* filename)
 {
     std::ofstream outfile;
-    outfile.open(filename);
+    outfile.open(filename, std::ios_base::trunc);
     outfile.write(data, dataLen);
     outfile.close();
 }
@@ -38,7 +38,8 @@ void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
     writeFileToDisk(metadataBuf, metadataLen, filename);
 }
 
-void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen)
+void readFileFromDisk(const char* const filename,
+                      char* buf, unsigned int &bufLen)
 {
     unsigned int position = 0;
     std::ifstream infile(filename);
@@ -50,7 +51,7 @@ void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen)
             position++;
         }
         buf[position-1] = '\0';
-        bufLen = position;
+        bufLen = position-1;
     }
     else
     {

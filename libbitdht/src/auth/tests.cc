@@ -52,12 +52,22 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
 --LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
+    unsigned int pgpkeyLen = 1066;
 
     registerAccount(username, usernameLen,
                     password, passwordLen,
-                    pgpkey, PGP_KEY_LEN);
+                    pgpkey, pgpkeyLen);
 
-    interactiveLogin(username, password, passwordLen);
+    // TODO: PGP_KEY_LEN being large enough to decrypt into it not a safe
+    //       assumption.
+    //       rsaes.cc checks for output buffer size of >
+    //       input_data_length + AES_BLOCK_SIZE.
+    //       Should probably allocate memory on file read, or establish a max
+    //       value.
+	char readPGPkey[PGP_KEY_LEN];
+	unsigned int readPGPkeyLen = PGP_KEY_LEN;
+    interactiveLogin(username, password, passwordLen, readPGPkey, readPGPkeyLen);
+    assert(memcmp(pgpkey, readPGPkey, readPGPkeyLen) == 0);
 }
 
 void test_readWriteArray()
@@ -195,6 +205,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
     // printf("--1. Kx1:\n[%s]\n", Kx1);
+    unsigned int Kx1len = 1066;
 
     char KKS[KEY_LEN];
     memset(KKS, '\0', KEY_LEN);
@@ -204,7 +215,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     memset(encryptedData, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int encryptedDataLen = FKS_ENCRYPTED_DATA_LEN + 17 + 1;
     encrypt(KKS,
-            Kx1, PGP_PUB_KEY_LEN,
+            Kx1, Kx1len,
             encryptedData, encryptedDataLen);
     // printf("--2. Kx1 encrypted into encryptedData(%d):\n[%s]\n", encryptedDataLen, encryptedData);
 
@@ -217,7 +228,8 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
             decryptedData, decryptedDataLen);
     // printf("--3. decryptedData(%d):\n[%s]\n", decryptedDataLen, decryptedData);
 
-    assert(strcmp(Kx1, decryptedData) == 0);
+    assert(Kx1len == decryptedDataLen);
+    assert(memcmp(Kx1, decryptedData, decryptedDataLen) == 0);
 }
 
 int main(int argc, char **argv)

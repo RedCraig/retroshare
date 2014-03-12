@@ -20,7 +20,7 @@
 //      file back from the DHT and the lengths are unknown.
 
 #include <stdio.h>  // printf
-#include <string.h> // memset
+#include <string.h> // memset, memcpy
 #include <iostream> // cout, endl
 #include <openssl/sha.h>
 
@@ -69,6 +69,10 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
                     password, PASSWORD_LEN,
                     pgpkey, PGP_KEY_LEN);
 
+
+    //    char pgpkey[PGP_PUB_KEY_LEN];
+    //    unsigned int pgpkeyLen = PGP_PUB_KEY_LEN;
+    // interactive auth
     return true;
 }
 
@@ -89,7 +93,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     memset(FKS, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int FKSEncryptedLen = FKS_ENCRYPTED_DATA_LEN;
     encrypt(KKS,
-            pgpkey, PGP_PUB_KEY_LEN,
+            pgpkey, pgpkeyLen,
             FKS, FKSEncryptedLen);
     printf("4: FKS ← encryptKKS (Kx1||Kx2|| . . .)\n");
 
@@ -130,7 +134,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     //       It could also have a DHT write fn.
     packMedataDataFile(salt,
                        KLI, SHA_DIGEST_LENGTH,
-                       filenameFKS, FILE_NAME_LEN,
+                       filenameFKS, filenameFKSLen,
                        KKS, KEY_LEN,
                        KW, KEY_LEN,
                        metadataBuff, metadataLen);
@@ -304,7 +308,8 @@ Algorithm 2 Login
 26: end if
 */
 void interactiveLogin(char* username,
-                      char* password, unsigned int passwordLen)
+                      char* password, unsigned int passwordLen,
+                      char* const PGP, unsigned int &PGPLen)
 {
     // 10:   fLI ← DHT.get(uname)
     // get metadata filename
@@ -314,22 +319,26 @@ void interactiveLogin(char* username,
     readFileFromDisk(username, metadataFileName, filenameLen);
 
     unsigned int salt = 0;
-    char FKS[FKS_ENCRYPTED_DATA_LEN];
-    unsigned int FKSLen = 0;
+    char filenameKS[FKS_ENCRYPTED_DATA_LEN];
+    unsigned int filenameKSLen = 0;
     char KKS[KEY_LEN];
     unsigned int KKSLen = 0;
     char KW[KEY_LEN];
     unsigned int KWLen = 0;
-    getMetadata(metadataFileName, password, passwordLen, salt, FKS, FKSLen,
+
+    getMetadata(metadataFileName, password, passwordLen, salt,
+                filenameKS, filenameKSLen,
                 KKS, KKSLen, KW, KWLen);
+
+    getPGPKey(KKS, filenameKS, filenameKSLen, PGP, PGPLen);
 }
 
 void getMetadata(char* const metadataFileName,
                  const char* const password,
                  const unsigned int passwordLen,
                  unsigned int &salt,
-                 char* const FKS,
-                 unsigned int &FKSLen,
+                 char* const fKS,
+                 unsigned int &fKSLen,
                  char* const KKS,
                  unsigned int &KKSLen,
                  char* const KW,
@@ -352,9 +361,27 @@ void getMetadata(char* const metadataFileName,
     unpackMetaDataFile(password, passwordLen,
                        metadataFile, metadataFileLen,
                        salt,
-                       FKS, FKSLen,
+                       fKS, fKSLen,
                        KKS, KKSLen,
                        KW, KWLen);
+}
+
+void getPGPKey(const char* const key,
+               const char* const filenameKS, const unsigned int filenameKSLen,
+               char* const outbuf, unsigned int &outbufLen)
+{
+    // 16: FKS ← Storage.read(fKS)
+    // read FKS from storage
+    char encryptedFKS[FKS_ENCRYPTED_DATA_LEN];
+    memset(encryptedFKS, '\0', FKS_ENCRYPTED_DATA_LEN);
+    unsigned int encryptedFKSLen = FKS_ENCRYPTED_DATA_LEN;
+    readFileFromDisk(filenameKS, encryptedFKS, encryptedFKSLen);
+
+    // 17: Kx1, Kx2,... ← decryptKKS (FKS)
+    // decrypt FKS contents using key: KKS
+    decrypt(key,
+            encryptedFKS, encryptedFKSLen,
+            outbuf, outbufLen);
 }
 
 // Algorithm 2 Login
@@ -364,8 +391,6 @@ void getMetadata(char* const metadataFileName,
 // 4:    fKS, KKS ← decryptKDL(FDL)
 // 5:    saveLoginLocally ← False
 
-// 16: FKS ← Storage.read(fKS)
-// 17: Kx1, Kx2,... ← decryptKKS (FKS)
 // 18: if saveLoginLocally then
 // 19:   KDL ← generateKey()
 // 20:   FDL ← encryptKDL(fKS||KKS)

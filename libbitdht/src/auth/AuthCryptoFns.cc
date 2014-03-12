@@ -5,8 +5,11 @@
  * Contains generic somewhat crypto related fns for auth.
 */
 #include "AuthCryptoFns.h"
+
+#include <assert.h>
 #include <openssl/sha.h>
 #include <fstream>      // std::ifstream
+#include <string.h> // memset, memcpy
 
 // TODO: fix relative import once makefile has been updated
 #include "../../libretroshare/src/util/rsaes.h"
@@ -50,11 +53,11 @@ void encrypt(char* key,
                           encryptedDataLen);
 }
 
-void decrypt(char* key,
+void decrypt(const char* const key,
              char* const dataToDecrypt,
              const unsigned int dataToDecryptLen,
              char* const decryptedData,
-             unsigned int decryptedDataLen)
+             unsigned int &decryptedDataLen)
 {
     // static bool   aes_crypt_8_16(const uint8_t *input_data,
     //                              uint32_t input_data_length,
@@ -69,14 +72,22 @@ void decrypt(char* key,
     //                              uint8_t *output_data,
     //                              uint32_t& output_data_length);
 
+    unsigned char newkey[16];
+    memcpy(newkey, key, 16);
+
     // Decrypt concatenated data [salt||Decrypt(KLI, (fKS||KKS||KW))] using
     // using symmetric key KLI (aes Decrypt/decrypt).
-    RsAES::aes_decrypt_8_16(reinterpret_cast<unsigned char*>(dataToDecrypt),
-                            dataToDecryptLen,
-                            reinterpret_cast<unsigned char*>(key),
-                            NULL,
-                            reinterpret_cast<unsigned char*>(decryptedData),
-                            decryptedDataLen);
+    bool ok = RsAES::aes_decrypt_8_16(reinterpret_cast<unsigned char*>(dataToDecrypt),
+                                      dataToDecryptLen,
+                                      newkey,
+                                      NULL,
+                                      reinterpret_cast<unsigned char*>(decryptedData),
+                                      decryptedDataLen);
+    if(!ok)
+    {
+        printf("AES decrypt failed.");
+        assert(ok == true);
+    }
 }
 
 unsigned int generateSalt()

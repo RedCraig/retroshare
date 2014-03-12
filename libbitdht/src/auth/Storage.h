@@ -31,6 +31,7 @@ void writeMetadataFile(char* metadataBuf,
 
 // bufLen[in] the length of buf that can be used
 // bufLen[out] the length of the data that was written to buf
-void readFileFromDisk(char* filename, char* buf, unsigned int &bufLen);
+void readFileFromDisk(const char* const filename,
+                      char* buf, unsigned int &bufLen);
 
 #endif //STORAGE_H

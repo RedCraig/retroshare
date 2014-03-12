@@ -29,11 +29,11 @@ void encrypt(char* key,
 // is called.
 // decryptedDataLen is updated in this fn to the final size that the decrypted
 // data occupies in decryptedDataLen buffer.
-void decrypt(char* key,
+void decrypt(const char* const key,
              char* const dataToDecrypt,
              const unsigned int dataToDecryptLen,
              char* const decryptedData,
-             unsigned int decryptedDataLen);
+             unsigned int &decryptedDataLen);
 
 unsigned int generateSalt();
 
