@@ -12,6 +12,7 @@
 #include "PasswordAuth.h"
 #include "Storage.h"
 #include "AuthCryptoFns.h"
+#include <iostream> // cout, endl
 
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
@@ -68,6 +69,8 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 	unsigned int readPGPkeyLen = PGP_KEY_LEN;
     interactiveLogin(username, password, passwordLen, readPGPkey, readPGPkeyLen);
     assert(memcmp(pgpkey, readPGPkey, readPGPkeyLen) == 0);
+//    std::cout << pgpkey << std::endl;
+//    std::cout << readPGPkey << std::endl;
 }
 
 void test_readWriteArray()
@@ -205,7 +208,8 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
     // printf("--1. Kx1:\n[%s]\n", Kx1);
-    unsigned int Kx1len = 1066;
+    unsigned int Kx1len = strlen(Kx1);//1066;
+
 
     char KKS[KEY_LEN];
     memset(KKS, '\0', KEY_LEN);
