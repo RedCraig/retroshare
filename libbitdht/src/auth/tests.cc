@@ -25,6 +25,7 @@
 void test_readWriteArray()
 {
     // Test write and read array work together.
+
     // char* writeArray(const char* const data, const unsigned int dataLen,
     //              char* const outbuf, unsigned int usedOutBufLen)
     // const char* readArray(const char* const data,
@@ -62,6 +63,8 @@ void test_readWriteArray()
 
 void test_packUnpackMetadata()
 {
+    // Test that pack and then unpack give you the same set of data.
+
     char password[PASSWORD_LEN] = "my password\0";
 
     // 3: KKS ← generateKey()
@@ -129,6 +132,8 @@ void test_packUnpackMetadata()
 
 void test_crypto()
 {
+    // test that encrypt and then decrypt gives back the same data.
+
     char Kx1[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
 \
