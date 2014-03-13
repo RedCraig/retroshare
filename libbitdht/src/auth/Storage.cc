@@ -8,7 +8,8 @@
 #include <iostream>     // cout, endl
 #include <cstring>      // strlen
 #include "Storage.h"
-#include <libbitdht/src/bitdht/bdiface.h>
+#include "bitdht/bdiface.h"
+#include "bitdht/bdnode.h"
 
 
 void writeFKSFile(char* data, int dataLen, char* filename,
@@ -61,18 +62,19 @@ void readFileFromDisk(const char* const filename,
 }
 
 // TODO: getHash
-void getHash(const unsigned char *const info_hash)
+void getHash(bdNode *const node,
+             const unsigned char *const info_hash)
 {
     // TODO: look at where bdNode.cc:: send_query() is called, and how the
     //       bdId and bdNodeId is formed for that call.
     // bdId and bdNodeId are defined in <libbitdht/src/bitdht/bdiface.h>
     bdId id;
 
-    bdNodeId id;
-    memcpy(id.data, info_hash, BITDHT_KEY_LEN);
+    bdNodeId nodeId;
+    memcpy(nodeId.data, info_hash, BITDHT_KEY_LEN);
 
     // bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash);
-    send_get_hash_query(bdId *id, id);
+    node->send_get_hash_query(&id, &nodeId);
 }
 
 // TODO: getHashCallback

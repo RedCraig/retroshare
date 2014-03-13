@@ -42,6 +42,7 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
   - [Done] currently saving only public part of PGP key. Look at what is in a PGP key,
   - add entire PGP key into FKS
   - locate in code where retroshare loads the local PGP key
+    - look n rsinit.cc, that's where they load the gpg/pgp key
 - update from local storage to using DHT storage
 - move the metadata file and key store file into their own classes
   and have those classes know how to serialise/deserialize their data.
@@ -120,6 +121,10 @@ DHT:
         - am just returning the file blob as a single string
 
     - add test code to get_hash()
+      - getHash() must specify a bdId to make the request against.
+        Look at where bdNode.cc:: send_query() is called, and how the
+        bdId and bdNodeId is formed for that call.
+
     - get two debug versions of retroshare talking and debug through get_hash() message on both peers
 
     - PasswordsAuth update to handle async messages & callbacks
@@ -131,10 +136,12 @@ DHT:
       - get kKS->KKS
 
   - hook up to RS code
+    - add code to rsinit.cc which sends a gethash() query
+      rsUdpStack *mDhtStack = new rsUdpStack(UDP_TEST_RESTRICTED_LAYER, tmpladdr);
+    -
     - bdNode::send_get_hash_query()
       where in RS should call this? need to go through managers code to see
       what should call it
-    - add code to rsinit(?) which sends a gethash() query
 
 - BOLLOCKS: HOW THE DO I MAKE SURE THAT ONE OF MY DEBUG DHT NODES IS THE
   ONE THAT HANDLES THE GET_HASH() OR POST_HASH() QUERY?
