@@ -93,6 +93,19 @@ DHT:
         from local hash store.
         - where on earth is the local hash store?
         - read from it and pass the found hash value to msgout_reply_hash()
+        - NOTE: this is where normally it reads all of the ip:ports of the
+          peers that are downloading the bittorrent filehash. In this new
+          PasswordsAuth version the data we want to fetch is not a
+          std::list<std::string> &values
+          like in bdNode.cc, but instead is a char* (an encrypted file).
+          - update processRemoteQuery to fetch and return a single blob
+          - update msgout_reply_hash to handle/expect a single blob
+          - update msgin_reply_hash to handle/expect a single blob
+          - possibly rename all of these fns to reflect the fact that they're a
+            special case and not the standard gethash fn call?
+          - possibly change the messageID of these messages to also reflect
+            that fact, it also means that these new msgs won't get confused
+            with the standard getHash set of messages.
 
     - msgin_reply_hash
       hooked up, but doesn't extract hash from msg
@@ -102,7 +115,7 @@ DHT:
         How does RS code do this? Check find_peer() code.
         bdNode is already the place to handle this code, so it calls the code
         directly to bdNode::addPeer()
-      - add a fn call to PasswordsAuth::getHashCallback()
+      - [Done] add a fn call to PasswordsAuth::getHashCallback()
       - check base message format, this fn expects a list of strings which are
         probably ip:ports of the bittorrent peers downloading that file info_hash.
         How will this work with our case, when we're returning a single 'file' blob
