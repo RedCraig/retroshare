@@ -1963,8 +1963,9 @@ void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token,
 	(void) transId;
 	(void) token;
 	(void) values;
-	// TODO:
-	PasswordsAuth.getHashCallback()
+
+	// bitdht/auth/Storage::getHashCallback()
+	getHashCallback(values);
 #endif
 }
 
