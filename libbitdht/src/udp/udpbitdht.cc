@@ -64,9 +64,6 @@ UdpBitDht::UdpBitDht(UdpPublisher *pub, bdNodeId *id, std::string appVersion, st
 {
 	std::string usedVersion;
 
-	// TODO: REMOVE THIS when unittest is working in auth/PasswordAuth
-	test_crypto();
-
 #ifdef BITDHT_VERSION_IDENTIFER
 	usedVersion = "BD";
 	usedVersion += BITDHT_VERSION;
