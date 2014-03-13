@@ -41,6 +41,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "../auth/Storage.h"
+
 
 #define BITDHT_QUERY_START_PEERS    10
 #define BITDHT_QUERY_NEIGHBOUR_PEERS    8
@@ -742,11 +744,28 @@ void bdNode::processRemoteQuery()
 					std::cerr << " TODO";
 					std::cerr << std::endl;
 #endif
-					// msgout_reply_hash
-					/* TODO */
-					/* for now drop */
-					/* unprocess! */
-					nProcessed--;
+					std::list<std::string> values;
+					// add a single string to the list
+					// TODO: I think the hash len is only 20chars
+					// TODO: find out how retroshare stores DHT hashes
+					//	 and store/get from there.
+					std::string hashString = "PGP hash from node";
+					values.push_front(hashString);
+
+					// get_hash replies must contain a token.
+					// The token is bittorrent related. The node making the get_hash request
+					// we are handling then uses the token in it's next query announce_peer
+					// when it starts downloading the bittorrent file.
+					// void bdNode::genNewToken(bdToken *token)
+					bdToken token;
+					genNewToken(&token);
+
+					// assemble and send the message
+					msgout_reply_hash(&(query.mId),
+					                  &token,
+					                  // transId is actully the token. Go figure.
+					                  &(query.mTransId),
+					                  values);
 					break;
 				}
 				default:
@@ -998,7 +1017,8 @@ void bdNode::msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 	mAccount.incCounter(BDACCOUNT_MSG_QUERYHASH, true);
 }
 
-void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token, std::list<std::string> &values)
+void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token,
+                               std::list<std::string> &values)
 {
 	// [2b]
 	// #### get_hash message process
@@ -1028,7 +1048,8 @@ void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token, std::
 
 	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_REPLY_HASH, NULL);
 
-        int blen = bitdht_peers_reply_hash_msg(transId, &(mOwnId), token, values, msg, avail-1);
+        int blen = bitdht_peers_reply_hash_msg(transId, &(mOwnId), token,
+                                               values, msg, avail-1);
 
         sendPkt(msg, blen, id->addr);
 

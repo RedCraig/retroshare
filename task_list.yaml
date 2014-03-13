@@ -89,6 +89,7 @@ DHT:
       which seems to be a list of strings.
       void msgout_reply_hash(bdId *id, bdToken *transId,
                              bdToken *token, std::list<std::string> &values);
+      - [Done] return hardcoded test value for now
       - processRemoteQuery needs to read the value for the given hash(key)
         from local hash store.
         - where on earth is the local hash store?
@@ -99,15 +100,12 @@ DHT:
           std::list<std::string> &values
           like in bdNode.cc, but instead is a char* (an encrypted file).
           - update processRemoteQuery to fetch and return a single blob
-          - update msgout_reply_hash to handle/expect a single blob
-          - update msgin_reply_hash to handle/expect a single blob
           - possibly rename all of these fns to reflect the fact that they're a
             special case and not the standard gethash fn call?
           - possibly change the messageID of these messages to also reflect
             that fact, it also means that these new msgs won't get confused
             with the standard getHash set of messages.
-
-    - msgin_reply_hash
+    - [Done] msgin_reply_hash
       hooked up, but doesn't extract hash from msg
       void msgin_reply_hash(bdId *id, bdToken *transId,
                             bdToken *token, std::list<std::string> &values);
@@ -116,9 +114,13 @@ DHT:
         bdNode is already the place to handle this code, so it calls the code
         directly to bdNode::addPeer()
       - [Done] add a fn call to PasswordsAuth::getHashCallback()
-      - check base message format, this fn expects a list of strings which are
+      - [Done] check base message format, this fn expects a list of strings which are
         probably ip:ports of the bittorrent peers downloading that file info_hash.
-        How will this work with our case, when we're returning a single 'file' blob
+        How will this work with our case, when we're returning a single 'file' blob.
+        - am just returning the file blob as a single string
+
+    - add test code to get_hash()
+    - get two debug versions of retroshare talking and debug through get_hash() message on both peers
 
     - PasswordsAuth update to handle async messages & callbacks
       Need to break each place in PasswordsAuth() which does a getHash into two fns:

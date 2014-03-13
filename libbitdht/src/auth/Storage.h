@@ -38,9 +38,10 @@ void writeMetadataFile(char* metadataBuf,
 void readFileFromDisk(const char* const filename,
                       char* buf, unsigned int &bufLen);
 
-// make a request to the DHT to get the key:value, where key is info_hash.
+// Make a request to the DHT to get the key:value, where key is info_hash.
 void getHash(const unsigned char *const info_hash);
 
+// The callback fn for getHash, returns a list of strings
 void getHashCallback(std::list<std::string> &values);
 
 #endif //STORAGE_H
