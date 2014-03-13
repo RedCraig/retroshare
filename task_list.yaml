@@ -35,6 +35,9 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
       - [Done] 13: KLI ← KDF(salt,passwd)
       - [Done] 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
     - [Done] unittest case
+
+- DHT time!
+
 - save entire PGP key
   - [Done] currently saving only public part of PGP key. Look at what is in a PGP key,
   - add entire PGP key into FKS
@@ -70,19 +73,57 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
 
 DHT:
 - get_hash
-    // get_hash (bittorrent get_peers) - get a value for a key from the DHT
-    // TODO: implemented but not hooked up
-    void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
-    // implemented and hooked up
-    void msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *nodeid);
-    // TODO: implemented, but not hooked up in processRemoteWuery.
-    //       When called it will need to be passed the hash value to return,
-    //       which seems to be a list of strings.
-    void msgout_reply_hash(bdId *id, bdToken *transId,
-                          bdToken *token, std::list<std::string> &values);
-    // TODO: hooked up, but doesn't extract hash from msg
-    void msgin_reply_hash(bdId *id, bdToken *transId,
-                          bdToken *token, std::list<std::string> &values);
+  - 4 messages required:
+    - [Done] msgout_get_hash
+      implemented but not hooked up
+      // get_hash (bittorrent get_peers) - get a value for a key from the DHT
+      void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
+      - [Done] add a bdNode::send_get_hash_query() fn to call it
+      - [Done] make sure it passes through the correct params for msgout_get_hash
+    - [Done] msgin_get_hash
+      implemented and hooked up
+      void msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *nodeid);
+    - msgout_reply_hash
+      Implemented, but not hooked up in processRemoteQuery.
+      When called it will need to be passed the hash value to return,
+      which seems to be a list of strings.
+      void msgout_reply_hash(bdId *id, bdToken *transId,
+                             bdToken *token, std::list<std::string> &values);
+      - processRemoteQuery needs to read the value for the given hash(key)
+        from local hash store.
+        - where on earth is the local hash store?
+        - read from it and pass the found hash value to msgout_reply_hash()
+
+    - msgin_reply_hash
+      hooked up, but doesn't extract hash from msg
+      void msgin_reply_hash(bdId *id, bdToken *transId,
+                            bdToken *token, std::list<std::string> &values);
+      - [Done] need to return query results to original query code.
+        How does RS code do this? Check find_peer() code.
+        bdNode is already the place to handle this code, so it calls the code
+        directly to bdNode::addPeer()
+      - add a fn call to PasswordsAuth::getHashCallback()
+      - check base message format, this fn expects a list of strings which are
+        probably ip:ports of the bittorrent peers downloading that file info_hash.
+        How will this work with our case, when we're returning a single 'file' blob
+
+    - PasswordsAuth update to handle async messages & callbacks
+      Need to break each place in PasswordsAuth() which does a getHash into two fns:
+      - DHT getHash
+      - setHashResult
+      - get uname->fLI
+      - get fLI->FLI
+      - get kKS->KKS
+
+  - hook up to RS code
+    - bdNode::send_get_hash_query()
+      where in RS should call this? need to go through managers code to see
+      what should call it
+    - add code to rsinit(?) which sends a gethash() query
+
+- BOLLOCKS: HOW THE DO I MAKE SURE THAT ONE OF MY DEBUG DHT NODES IS THE
+  ONE THAT HANDLES THE GET_HASH() OR POST_HASH() QUERY?
+
 - post hash
     // post hash should determine the filename (i.e. key) if possible
     // post_hash (bittorrent announce_peers) - write a key:value to the DHT
@@ -101,61 +142,21 @@ DHT:
 - Then unittest or get RS into a test case to verify we get or send data.
   If this doesn't work out of the box, debugging could take a _lot_ of time.
 
-
-paper notes:
-- distributed storage allows for brute forcing
-- why is the salt in plaintext, makes it easier to hack/brute force
-
-
-task list:
-- figure out what bittorrent dht command retroshare is using to add it's peers to the bitDHT
-  - likely announce_peer
-  - but they also have to find peers ?
-- figure out bitdht message handling
-- add a new message to get a key
-  - add the message type
-  - add a send message fn to send the message
-    - figure out where to hardcode a message send
-  - add a message receiver (does it use callbacks?)
-- add code to add the actual key:value to the DHT (urp!)
-- add code to read a value from the DHT
-- re-read passwords paper and create todo list from that
-
-
-last trying:
-to figure out how to make dht calls, found some in iface and the queries in bdquerymgr, but can't find any trace of 'token' in response from dht.
-- need to figure out what api calls dht makes to bitdht mainline
-
-- retroshare uses bitdht mainline to find their friends, so the find logic must start there
-- retroshare must use bitdht mainline to hold their own rshash:(ip:port) entry,
-  - where is this written?
-  - which bitdht call creates this entry?
-
-- Need to trace through how queries and results are handled still
+- [Done] need to trace through how queries and results are handled
   bdiface::libbitdht/src/bitdht/bdiface.h
   class BitDhtCallback:
       dhtPeerCallback
       dhtValueCallback
       dhtInfoCallback
-
-- for callbacks, what is the difference between a peer and a node?
-
-- bitdht/src/bdnode.cc looks like it has message types
-  bdNode::iteration() is what's called near the start of the callback stack:
-    p3BdCallback::dhtNodeCallback() at p3bitdht.cc:54 0xac70f3
-    bdNodeManager::doNodeCallback() at bdmanager.cc:1,147 0xd3e5b7
-    bdNodeManager::addPeer() at bdmanager.cc:1,124 0xd3e5eb
-    bdNode::recvPkt() at bdnode.cc:1,555 0xd3ccf8
-    bdNode::iteration() at bdnode.cc:312 0xd3d1da
-    bdNodeManager::iteration() at bdmanager.cc:495 0xd3f4ff
-    UdpBitDht::run() at udpbitdht.cc:327 0xd2cdc7
-    bdthread_init() at bdthreads.cc:57 0xd44dbf
-
-- what determines the message type enum values? they must be shared with bittorrent, otherwise the bittorrent nodes wouldn't be able to handle them. The message format must be shared too.
-
-- left it here:
-bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
+- [Done] how to send queries:
+  bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
   msgout_find_node(id, &transId, targetNodeId);
   - trying to figure out the stack/how/when bitdht sends a find_node message
   - it appears to be the only handled incoming message in bdnode? surely not, rs must support the other bittorrent calls right?
   - even if find_node is enough, how do you go from find_node to getting a key:value from the find_node call? I don't think you can.
+
+paper notes:
+- distributed storage allows for brute forcing
+- why is the salt in plaintext, makes it easier to hack/brute force
+- what determines the message type enum values? they must be shared with bittorrent, otherwise the bittorrent nodes wouldn't be able to handle them. The message format must be shared too.
+- retroshare uses a node entry to hold the IP, so they don't actually write to the DHT key:value.
