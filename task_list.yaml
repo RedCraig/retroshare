@@ -36,8 +36,9 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
       - [Done] 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
     - [Done] unittest case
 - save entire PGP key
-  - currently saving only public part of PGP key. Look at what is in a PGP key,
+  - [Done] currently saving only public part of PGP key. Look at what is in a PGP key,
   - add entire PGP key into FKS
+  - locate in code where retroshare loads the local PGP key
 - update from local storage to using DHT storage
 - move the metadata file and key store file into their own classes
   and have those classes know how to serialise/deserialize their data.
