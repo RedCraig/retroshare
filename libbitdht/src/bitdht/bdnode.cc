@@ -460,6 +460,24 @@ void bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
 }
 
 
+void bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash)
+{
+	/* push out query */
+	bdToken transId;
+	genNewTransId(&transId);
+
+	msgout_get_hash(id, &transId, info_hash);
+
+#ifdef DEBUG_NODE_MSGS
+	std::cerr << "bdNode::send_query() get_hash : ";
+	mFns->bdPrintId(std::cerr, &id);
+	std::cerr << " hash : ";
+	mFns->bdPrintNodeId(std::cerr, info_hash);
+	std::cerr << std::endl;
+#endif
+}
+
+
 void bdNode::send_connect_msg(bdId *id, int msgtype, bdId *srcAddr, bdId *destAddr, int mode, int param, int status)
 {
 	/* push out query */
@@ -955,6 +973,11 @@ void bdNode::msgout_reply_find_node(bdId *id, bdToken *transId, std::list<bdId> 
 
 void bdNode::msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 {
+	// [1]
+	// #### get_hash message process
+	// [1] peer1.msgout_get_hash -> [2a] peer2.msgin_get_hash
+	// [2b] peer2.msgout_reply_hash -> [3] peer1.msgin_reply_hash
+
 #ifdef DEBUG_NODE_MSGOUT
 	std::cerr << "bdNode::msgout_get_hash() TransId: ";
 	bdPrintTransId(std::cerr, transId);
@@ -964,23 +987,24 @@ void bdNode::msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 	mFns->bdPrintNodeId(std::cerr, info_hash);
 	std::cerr << std::endl;
 #endif
-
         char msg[10240];
         int avail = 10240;
 
 	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_GET_HASH, info_hash);
 
-
         int blen = bitdht_get_peers_msg(transId, &(mOwnId), info_hash, msg, avail-1);
-
         sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_QUERYHASH, true);
-
 }
 
 void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token, std::list<std::string> &values)
 {
+	// [2b]
+	// #### get_hash message process
+	// [1] peer1.msgout_get_hash -> [2a] peer2.msgin_get_hash
+	// [2b] peer2.msgout_reply_hash -> [3] peer1.msgin_reply_hash
+
 #ifdef DEBUG_NODE_MSGOUT
 	std::cerr << "bdNode::msgout_reply_hash() TransId: ";
 	bdPrintTransId(std::cerr, transId);
@@ -1578,6 +1602,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 		}
 		case BITDHT_MSG_TYPE_GET_HASH:    /* a: id, transId, info_hash */
 		{
+			// rcvPkt
 #ifdef DEBUG_NODE_MSGS
 			std::cerr << "bdNode::recvPkt() Received SearchHash : ";
 			mFns->bdPrintId(std::cerr, &srcId);
@@ -1590,6 +1615,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 		}
 		case BITDHT_MSG_TYPE_REPLY_HASH:  /* r: id, transId, token, values */
 		{
+			// rcvPkt
 #ifdef DEBUG_NODE_MSGS
 			std::cerr << "bdNode::recvPkt() Received Reply Hash : ";
 			mFns->bdPrintId(std::cerr, &srcId);
@@ -1886,7 +1912,10 @@ void bdNode::msgin_reply_find_node(bdId *id, bdToken *transId, std::list<bdId> &
 
 void bdNode::msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 {
-
+	// [2a]
+	// #### get_hash message process
+	// [1] peer1.msgout_get_hash -> [2a] peer2.msgin_get_hash
+	// [2b] peer2.msgout_reply_hash -> [3] peer1.msgin_reply_hash
 
 #ifdef DEBUG_NODE_MSGIN
 	std::cerr << "bdNode::msgin_get_hash() TransId: ";
@@ -1897,17 +1926,20 @@ void bdNode::msgin_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 	mFns->bdPrintNodeId(std::cerr, info_hash);
 	std::cerr << std::endl;
 #endif
-
-
 	mAccount.incCounter(BDACCOUNT_MSG_QUERYHASH, false);
 
 	/* generate message, send to udp */
 	queueQuery(id, info_hash, transId, BD_QUERY_HASH);
-
 }
 
-void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token, std::list<std::string> &values)
+void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token,
+                              std::list<std::string> &values)
 {
+	// [3]
+	// #### get_hash message process
+	// [1] peer1.msgout_get_hash -> [2a] peer2.msgin_get_hash
+	// [2b] peer2.msgout_reply_hash -> [3] peer1.msgin_reply_hash
+
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYQUERYHASH, false);
 
 #ifdef DEBUG_NODE_MSGIN
@@ -1931,6 +1963,8 @@ void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token, std::l
 	(void) transId;
 	(void) token;
 	(void) values;
+	// TODO:
+	PasswordsAuth.getHashCallback()
 #endif
 }
 

@@ -195,7 +195,7 @@ bdNode::recvPkt();
 
 #### get_hash
 [1] peer1.msgout_get_hash -> [2] peer2.msgin_get_hash
-[2] peer2.msgout_reply_hash -> [3] peer2.msgin_reply_hash
+[2] peer2.msgout_reply_hash -> [3] peer1.msgin_reply_hash
 
 [1] not implemented or hooked up
 [2] peer2.msgin_get_hash

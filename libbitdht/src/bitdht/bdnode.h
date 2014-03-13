@@ -147,6 +147,7 @@ class bdNode: public bdNodePublisher
 	/* simplified outgoing msg functions (for the managers) */
 	virtual void send_ping(bdId *id); /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId); /* message out */
+	virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash);
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 
@@ -170,7 +171,7 @@ void	sendPkt(char *msg, int len, struct sockaddr_in addr);
 void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 
-	// fine_node
+	// find_node
 	// peer1.msgout_find_node -> peer2.msgin_find_node
 	// peer2.msgout_reply_find_node -> peer1.msgin_reply_find_node
 	void msgout_find_node(bdId *id, bdToken *transId, bdNodeId *query);
@@ -195,7 +196,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	//		 When called it will need to be passed the hash value to return,
 	//		 which seems to be a list of strings.
 	void msgout_reply_hash(bdId *id, bdToken *transId,
-		  				  bdToken *token, std::list<std::string> &values);
+		  				   bdToken *token, std::list<std::string> &values);
 	// TODO: hooked up, but doesn't extract hash from msg
 	void msgin_reply_hash(bdId *id, bdToken *transId,
 						  bdToken *token, std::list<std::string> &values);
