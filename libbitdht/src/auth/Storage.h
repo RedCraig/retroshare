@@ -9,6 +9,10 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
+#include <list>
+#include <string>  // string, strlen
+
+
 // write data to disk.
 void writeFileToDisk(char* data, int dataLen, char* filename);
 
@@ -33,5 +37,10 @@ void writeMetadataFile(char* metadataBuf,
 // bufLen[out] the length of the data that was written to buf
 void readFileFromDisk(const char* const filename,
                       char* buf, unsigned int &bufLen);
+
+// make a request to the DHT to get the key:value, where key is info_hash.
+void getHash(const unsigned char *const info_hash);
+
+void getHashCallback(std::list<std::string> &values);
 
 #endif //STORAGE_H

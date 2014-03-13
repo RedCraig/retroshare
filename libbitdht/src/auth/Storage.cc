@@ -6,8 +6,9 @@
 */
 #include <fstream>      // std::ifstream, std::ofstream
 #include <iostream>     // cout, endl
-#include <string.h>     // strlen
+#include <cstring>      // strlen
 #include "Storage.h"
+#include <libbitdht/src/bitdht/bdiface.h>
 
 
 void writeFKSFile(char* data, int dataLen, char* filename,
@@ -57,4 +58,32 @@ void readFileFromDisk(const char* const filename,
     {
         std::cout << "File" << filename << "could not be opened." << std::endl;
     }
+}
+
+// TODO: getHash
+void getHash(const unsigned char *const info_hash)
+{
+    // TODO: look at where bdNode.cc:: send_query() is called, and how the
+    //       bdId and bdNodeId is formed for that call.
+    // bdId and bdNodeId are defined in <libbitdht/src/bitdht/bdiface.h>
+    bdId id;
+
+    bdNodeId id;
+    memcpy(id.data, info_hash, BITDHT_KEY_LEN);
+
+    // bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash);
+    send_get_hash_query(bdId *id, id);
+}
+
+// TODO: getHashCallback
+void getHashCallback(std::list<std::string> &values)
+{
+    std::cerr << " hash peers:";
+    std::list<std::string>::iterator it;
+    for(it = values.begin(); it != values.end(); it++)
+    {
+        std::cerr << " hash content here";
+        // bdPrintCompactPeerId(std::cerr, *it);
+    }
+    std::cerr << std::endl;
 }
