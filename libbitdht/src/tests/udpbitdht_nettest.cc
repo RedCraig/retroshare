@@ -30,6 +30,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /*******************************************************************
  * DHT test program.
@@ -98,7 +99,7 @@ int main(int argc, char **argv)
 					args(argv[0]);
 					return 1;
 				}
-					
+
 			}
 			break;
 			case 'b':
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-				
+
 	bdDhtFunctions *fns = new bdStdDht();
 
 	bdNodeId id;
