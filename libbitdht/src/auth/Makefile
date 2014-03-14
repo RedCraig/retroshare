@@ -22,10 +22,10 @@ EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o tests.o
 all: main msgtest
 
 main: $(EGOBJ)
-	$(CXX) $(CXXFLAGS) -o runtests $(EGOBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o tests $(EGOBJ) $(LIBS)
 
-test: tests.o
-	$(CXX) $(CXXFLAGS) -o runtests tests.o $(LIBS)
+# test: tests.o
+# 	$(CXX) $(CXXFLAGS) -o tests tests.o $(LIBS)
 
 msgtest: udpbitdht_msgtest.o
 	$(CXX) $(CXXFLAGS) -o udpbitdht_msgtest udpbitdht_msgtest.o $(LIBS)
