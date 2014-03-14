@@ -39,8 +39,6 @@
 
 #include "util/bdnet.h"
 
-#include "auth/PasswordAuth.cc"
-
 /*
  * #define DEBUG_UDP_BITDHT 1
  *

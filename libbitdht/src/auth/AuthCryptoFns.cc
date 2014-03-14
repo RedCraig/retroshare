@@ -13,8 +13,9 @@
 
 // TODO: fix relative import once makefile has been updated
 #include "../../libretroshare/src/util/rsaes.h"
-
-
+// #include <libretroshare/util/rsaes.h>
+// #include <util/rsaes.h>
+// #include "util/rsaes.h"
 
 void generateKey(char *key, int keylen)
 {
