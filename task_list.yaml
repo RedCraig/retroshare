@@ -1,8 +1,9 @@
-TODO
-^^^^
+TODO:
+^^^^^
 
 Passwords:
-Implement passwords design in retroshare (store locally if I still have DHT issues)
+^^^^^^^^^^
+Implement passwords design in retroshare, using local storage.
 - [Done] implement account creation
   - [Done] 3: KKS ← generateKey()
            KKS used to encrypt FKS, the encrypted file with PGP data
@@ -36,43 +37,23 @@ Implement passwords design in retroshare (store locally if I still have DHT issu
       - [Done] 14: fKS, KKS, KW, devmap ← decryptKLI (FLI)
     - [Done] unittest case
 
-- DHT time!
-
-- save entire PGP key
-  - [Done] currently saving only public part of PGP key. Look at what is in a PGP key,
-  - add entire PGP key into FKS
-  - locate in code where retroshare loads the local PGP key
-    - look n rsinit.cc, that's where they load the gpg/pgp key
-- update from local storage to using DHT storage
-- move the metadata file and key store file into their own classes
-  and have those classes know how to serialise/deserialize their data.
-
-- Implement multi device login
-  Login devmap in metadata.
-  Allows multiple devices to save log in credentials and
-  user to revoke all devices via devmap.
-  - save login credentials Locally
-    - implement devmap in metadata file (FLI)
-  - 1: fDL, KDL ← Device.readLocalStore()
-  - 2: if fDL "= NULL then // non-interactive login
-  - 3: FDL ← Storage.read(fDL)
-  - 4: fKS, KKS ← decryptKDL(FDL)
-  - 5: saveLoginLocally ← False
-  - 16: FKS ← Storage.read(fKS)
-  - 17: Kx1, Kx2,... ← decryptKKS (FKS)
-  - 18: if saveLoginLocally then
-  - 19: KDL ← generateKey()
-  - 20: FDL ← encryptKDL(fKS||KKS)
-  - 21: fDL ← Storage.create(FDL)
-  - 22: Device.writeLocalStore(fDL||KDL)
-  - 23: devmap.append(Device.ID, fDL||KDL)
-  - 24: FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
-  - 25: Storage.write(fLI,FLI) // using KW
-  - 26: end if
-  - write unittest case
-
-
 DHT:
+^^^^
+- [Done] need to trace through how queries and results are handled
+  bdiface::libbitdht/src/bitdht/bdiface.h
+  class BitDhtCallback:
+      dhtPeerCallback
+      dhtValueCallback
+      dhtInfoCallback
+- [Done] how to send queries:
+  bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
+  msgout_find_node(id, &transId, targetNodeId);
+  - trying to figure out the stack/how/when bitdht sends a find_node message
+  - it appears to be the only handled incoming message in bdnode? surely not, rs must support the other bittorrent calls right?
+    Nope!
+  - even if find_node is enough, how do you go from find_node to getting a key:value from the find_node call? I dont think you can.
+    RS doesn't do this, a node has an IP addr and that's all RS needs to connect. So RS doesn't actually write or read from the DHT itself.
+
 - get_hash
   - 4 messages required:
     - [Done] msgout_get_hash
@@ -164,20 +145,45 @@ DHT:
 - Then unittest or get RS into a test case to verify we get or send data.
   If this doesn't work out of the box, debugging could take a _lot_ of time.
 
-- [Done] need to trace through how queries and results are handled
-  bdiface::libbitdht/src/bitdht/bdiface.h
-  class BitDhtCallback:
-      dhtPeerCallback
-      dhtValueCallback
-      dhtInfoCallback
-- [Done] how to send queries:
-  bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
-  msgout_find_node(id, &transId, targetNodeId);
-  - trying to figure out the stack/how/when bitdht sends a find_node message
-  - it appears to be the only handled incoming message in bdnode? surely not, rs must support the other bittorrent calls right?
-  - even if find_node is enough, how do you go from find_node to getting a key:value from the find_node call? I don't think you can.
+
+Passwords Nice to Haves:
+^^^^^^^^^^^^^^^^^^^^^^^^
+- save entire PGP key
+  - [Done] currently saving only public part of PGP key. Look at what is in a PGP key,
+  - add entire PGP key into FKS
+  - locate in code where retroshare loads the local PGP key
+    - look n rsinit.cc, that's where they load the gpg/pgp key
+- update from local storage to using DHT storage
+- move the metadata file and key store file into their own classes
+  and have those classes know how to serialise/deserialize their data.
+
+- Implement multi device login
+  Login devmap in metadata.
+  Allows multiple devices to save log in credentials and
+  user to revoke all devices via devmap.
+  - save login credentials Locally
+    - implement devmap in metadata file (FLI)
+  - 1: fDL, KDL ← Device.readLocalStore()
+  - 2: if fDL "= NULL then // non-interactive login
+  - 3: FDL ← Storage.read(fDL)
+  - 4: fKS, KKS ← decryptKDL(FDL)
+  - 5: saveLoginLocally ← False
+  - 16: FKS ← Storage.read(fKS)
+  - 17: Kx1, Kx2,... ← decryptKKS (FKS)
+  - 18: if saveLoginLocally then
+  - 19: KDL ← generateKey()
+  - 20: FDL ← encryptKDL(fKS||KKS)
+  - 21: fDL ← Storage.create(FDL)
+  - 22: Device.writeLocalStore(fDL||KDL)
+  - 23: devmap.append(Device.ID, fDL||KDL)
+  - 24: FLI ← salt||encryptKLI (fKS||KKS||KW||devmap)
+  - 25: Storage.write(fLI,FLI) // using KW
+  - 26: end if
+  - write unittest case
+
 
 paper notes:
+^^^^^^^^^^^^
 - distributed storage allows for brute forcing
 - why is the salt in plaintext, makes it easier to hack/brute force
 - what determines the message type enum values? they must be shared with bittorrent, otherwise the bittorrent nodes wouldn't be able to handle them. The message format must be shared too.
