@@ -4,3 +4,4 @@ cd ~/retroshare/libbitdht/src && qmake && make clean && make -j4
 cd ~/retroshare/openpgpsdk/src && qmake && make clean && make -j4
 cd ~/retroshare/libretroshare/src && qmake && make clean && make -j4
 cd ~/retroshare/retroshare-gui/src && qmake && make clean && make -j4
+cd ~/retroshare/retroshare-gui/src && make -j4
