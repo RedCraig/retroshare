@@ -29,5 +29,11 @@ libbitdht/dht_filename_for_fks.txt
 libbitdht/src/auth/runtests
 libbitdht/src/auth/my name
 libbitdht/my name
-
 libbitdht/src/auth/Storage.h.gch
+libbitdht/src/tests/bdbloom_test
+libbitdht/src/tests/bdmgr_multitest
+libbitdht/src/tests/bdmidids_test
+libbitdht/src/tests/bdquery_test
+libbitdht/src/tests/bdspace_test2
+libbitdht/src/tests/bdstore_test
+libbitdht/src/tests/udpbitdht_nettest
