@@ -17,13 +17,18 @@ LIBS = -L../lib -lbitdht -lpthread -L$(RSLIBDIR)/src/lib -lretroshare -lcrypto
 # the above INCPATH path should expand to:
 # INCPATH = -I../../../libretroshare/src
 
-EXEC = runtests
-EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o tests.o udpbitdht_msgtest.o
+EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o tests.o
 
-all: tests
+all: main msgtest
 
-tests: $(EGOBJ)
-	$(CXX) $(CXXFLAGS) -o $(EXEC) $(EGOBJ) $(LIBS)
+main: $(EGOBJ)
+	$(CXX) $(CXXFLAGS) -o runtests $(EGOBJ) $(LIBS)
+
+test: tests.o
+	$(CXX) $(CXXFLAGS) -o runtests tests.o $(LIBS)
+
+msgtest: udpbitdht_msgtest.o
+	$(CXX) $(CXXFLAGS) -o udpbitdht_msgtest udpbitdht_msgtest.o $(LIBS)
 
 clean:
 	rm -f $(EGOBJ) $(EXEC)
