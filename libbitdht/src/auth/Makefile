@@ -3,7 +3,6 @@ CXXFLAGS = -Wall -g -I..
 
 LIB_TOP_DIR = ../..
 RSLIBDIR = $(LIB_TOP_DIR)/../libretroshare
-
 LIBS = -L../lib -lbitdht -lpthread -L$(RSLIBDIR)/src/lib -lretroshare -lcrypto
 
 # OK. So in the current dir, /libbitdht/src/auth
@@ -24,10 +23,7 @@ EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o tests.o udpbitdht_msgtest.o
 all: tests
 
 tests: $(EGOBJ)
-
-# FILES = Storage.cc AuthCryptoFns.cc PasswordAuth.cc tests.cc udpbitdht_msgtest.cc
-# tests:
-	# $(CXX) -v $(CXXFLAGS) $(INCPATH) -o $(EXEC) $(FILES) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $(EXEC) $(EGOBJ) $(LIBS)
 
 clean:
 	rm -f $(EGOBJ) $(EXEC)
