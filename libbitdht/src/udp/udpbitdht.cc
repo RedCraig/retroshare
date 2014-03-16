@@ -236,6 +236,14 @@ int UdpBitDht::stateDht()
 	return mBitDhtManager->stateDht();
 }
 
+int UdpBitDht::printDht()
+{
+	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/
+
+	mBitDhtManager->printDht();
+	return 1;
+}
+
 uint32_t UdpBitDht::statsNetworkSize()
 {
 	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/

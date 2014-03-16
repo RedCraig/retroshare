@@ -35,7 +35,7 @@
 #include "bitdht/bdiface.h"
 #include "bitdht/bdmanager.h"
 
-/* 
+/*
  * This implements a UdpSubReceiver class to allow the DHT to talk to the network.
  * The parser is very strict - and will try to not pick up anyone else's messages.
  *
@@ -43,9 +43,9 @@
  * This class is also a thread - enabling it to do callback etc.
  */
 
-// class BitDhtCallback defined in bdiface.h 
+// class BitDhtCallback defined in bdiface.h
 
-	
+
 class UdpBitDht: public UdpSubReceiver, public bdThread, public BitDhtInterface
 {
 	public:
@@ -74,7 +74,7 @@ virtual	void removeCallback(BitDhtCallback *cb);
 
         /***** Connections Requests *****/
 virtual bool ConnectionRequest(struct sockaddr_in *laddr, bdNodeId *target, uint32_t mode, uint32_t delay, uint32_t start);
-virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc, 
+virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, uint32_t mode, uint32_t loc,
 											uint32_t bandwidth, uint32_t delay, uint32_t answer);
 virtual void ConnectionOptions(uint32_t allowedModes, uint32_t flags);
 virtual bool setAttachMode(bool on);
@@ -90,9 +90,10 @@ virtual int getDhtQueryStatus(const bdNodeId *id, bdQuerySummary &query);
         /* stats and Dht state */
 virtual int startDht();
 virtual int stopDht();
-virtual int stateDht(); 
+virtual int stateDht();
+virtual int printDht();
 virtual uint32_t statsNetworkSize();
-virtual uint32_t statsBDVersionSize(); 
+virtual uint32_t statsBDVersionSize();
 virtual uint32_t setDhtMode(uint32_t dhtFlags);
 
 void getDataTransferred(uint32_t &read, uint32_t &write);

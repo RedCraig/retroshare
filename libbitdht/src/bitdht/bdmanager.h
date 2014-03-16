@@ -89,7 +89,7 @@ class bdQueryPeer
 #define BITDHT_MGR_QUERY_PEER_ONLINE		4
 
 
-/*** NB: Nothing in here is protected by mutexes 
+/*** NB: Nothing in here is protected by mutexes
  * must be done at a higher level!
  ***/
 
@@ -128,7 +128,7 @@ virtual int getDhtQueryStatus(const bdNodeId *id, bdQuerySummary &query);
 
 	/***** Connection Interface ****/
 virtual bool ConnectionRequest(struct sockaddr_in *laddr, bdNodeId *target, uint32_t mode, uint32_t delay, uint32_t start);
-virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId, 
+virtual void ConnectionAuth(bdId *srcId, bdId *proxyId, bdId *destId,
 						uint32_t mode, uint32_t loc, uint32_t bandwidth, uint32_t delay, uint32_t answer);
 virtual void ConnectionOptions(uint32_t allowedModes, uint32_t flags);
 
@@ -138,6 +138,7 @@ virtual bool setAttachMode(bool on);
 virtual int startDht();
 virtual int stopDht();
 virtual int stateDht(); /* STOPPED, STARTING, ACTIVE, FAILED */
+virtual int printDht();
 virtual uint32_t statsNetworkSize();
 virtual uint32_t statsBDVersionSize(); /* same version as us! */
 
@@ -149,7 +150,7 @@ virtual uint32_t setDhtMode(uint32_t dhtFlags);
 virtual void addPeer(const bdId *id, uint32_t peerflags);
         // Overloaded from bdnode for external node callback.
 virtual void callbackConnect(bdId *srcId, bdId *proxyId, bdId *destId,
-                                        int mode, int point, int param, int cbtype, int errcode); 
+                                        int mode, int point, int param, int cbtype, int errcode);
 
 int 	isBitDhtPacket(char *data, int size, struct sockaddr_in &from);
 	private:
@@ -201,7 +202,7 @@ class bdDebugCallback: public BitDhtCallback
         ~bdDebugCallback();
 virtual int dhtPeerCallback(const bdId *id, uint32_t status);
 virtual int dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status);
-virtual int dhtConnectCallback(const bdId *srcId, const bdId *proxyId, const bdId *destId,             
+virtual int dhtConnectCallback(const bdId *srcId, const bdId *proxyId, const bdId *destId,
                          uint32_t mode, uint32_t point, uint32_t param, uint32_t cbtype, uint32_t errcode);
 virtual int dhtInfoCallback(const bdId *id, uint32_t type, uint32_t flags, std::string info);
 
