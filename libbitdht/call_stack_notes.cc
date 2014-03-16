@@ -151,13 +151,15 @@ bdmsgs has message creation and parsing functions
 < ADD FRIEND >
 // I added the friend via UI, or on startup:
 // it adds the peer we're interested in to bdNodeManager.mActivePeers
-// which is then added to the query queue, and hanndled (sent) in bdQueryManager
+// which is then added to the query queue by bdNodeManager::startQueries
+// and hanndled (sent) in bdQueryManager
 bdNodeManager::addFindNode() at bdmanager.cc:193 0xd3f79b;
 UdpBitDht::addFindNode() at udpbitdht.cc:114 0xd2bdd1;
 p3BitDht::findPeer() at p3bitdht_peers.cc:131 0xacb07f;
 p3NetMgrIMPL::netAssistFriend() at p3netmgr.cc:1,372 0xc4ba1b;
 p3LinkMgrIMPL::addFriend() at p3linkmgr.cc:2,147 0xc449f9;
-// query is sent bdQueryManager, and handled by that thread
+// query is sent bdQueryManager in bdNodeManager::startQueries()
+// and handled by bdQueryManagers thread
 bdmsgs::bitdht_find_node_msg(transId, &(mOwnId), query, msg, avail-1);
 bdNode::msgout_find_node(id, &transId, targetNodeId);
 bdNode::send_query() at bdnode.cc:451 0xd3b70a;
