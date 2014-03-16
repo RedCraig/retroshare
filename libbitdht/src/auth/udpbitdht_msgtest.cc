@@ -227,6 +227,11 @@ int main(int argc, char **argv)
         {
             std::cerr << "BITDHT_MGR_STATE_ACTIVE" << std::endl;
             bitdht->printDht();
+
+            // bdNodeId *id, std::string key, uint32_t mode )
+            // our node ID, the key we're looking for, mode
+            // TODO: MODE? WHAT NOW?
+            bitdht->findDhtValue(&id, "testhash", 1);
         }
 
         std::cerr << "Dht Network Size: ";
