@@ -37,3 +37,5 @@ libbitdht/src/tests/bdquery_test
 libbitdht/src/tests/bdspace_test2
 libbitdht/src/tests/bdstore_test
 libbitdht/src/tests/udpbitdht_nettest
+libbitdht/src/auth/tests
+libbitdht/src/auth/udpbitdht_msgtest
