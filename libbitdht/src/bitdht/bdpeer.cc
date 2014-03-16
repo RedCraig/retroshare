@@ -858,7 +858,7 @@ int     bdSpace::printDHT()
 
 	/* iterate through the buckets, and sort by distance */
 	int i = 0;
-
+//#define BITDHT_DEBUG 1
 #ifdef BITDHT_DEBUG
 	fprintf(stderr, "bdSpace::printDHT()\n");
 	for(it = buckets.begin(); it != buckets.end(); it++, i++)
