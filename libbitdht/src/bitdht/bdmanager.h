@@ -112,7 +112,7 @@ virtual void updateKnownPeer(const bdId *id, uint32_t type, uint32_t flags);
         /* Request Keyword Lookup */
 virtual void addFindNode(bdNodeId *id, uint32_t mode);
 virtual void removeFindNode(bdNodeId *id);
-virtual void findDhtValue(bdNodeId *id, std::string key, uint32_t qflags);
+virtual void getHash(bdId &targetNode, bdNodeId &key);
 
         /***** Add / Remove Callback Clients *****/
 virtual void addCallback(BitDhtCallback *cb);

@@ -226,6 +226,46 @@ void bdNodeManager::addFindNode(bdNodeId *id, uint32_t qflags)
 	return;
 }
 
+void bdNodeManager::getHash(bdId &targetNode, bdNodeId &key)
+/*
+targetNode the the target node id
+key is the key to find in the DHT
+*/
+{
+#ifdef DEBUG_MGR
+	std::cerr << "bdNodeManager::findDhtValue()";
+	std::cerr << std::endl;
+#endif
+
+	// TODO: need to add the bdNodeId to active peers,
+	// 		 and then add support in bdquerymgr for the new query type (get hash)
+	//		 so that it can call bdNode::send_get_hash_query()
+	//		 instead of always calling bdNode::send_query()
+	// I'm concerned that the query will not find the closest peer for the hash
+	// beyond the first check in bdQueryManager.addQuery, which does a
+	// mNodeSpace->find_nearest_nodes(id, BITDHT_QUERY_START_PEERS, nearest);
+	// Is the provided bdNodeId here the id that the query is run against?
+	// If not, does bep005 say how the get_hash request works? i.e. it must know from hash how to get the peerid
+
+	// peer.mStatus = BITDHT_QUERY_QUERYING; //QUERYING;
+
+	// Skipping the whole adding to mActivePeers and then using
+	// startQueries() step which normally adds these to mQueryMgr.
+	// [TODO] We may want to remove the disguise flag. Check what qflags are.
+	// qflags = qflags | BITDHT_QFLAGS_DISGUISE;
+	// use key here?
+	// mQueryMgr->addQuery(targetNode, qflags);
+	// send_get_hash_query(bdId *id, bdNodeId *const info_hash)
+	send_get_hash_query(targetNode, key);
+
+	// TODO: We need the bdQueryManager to understand peer get hash queries.
+	//		 At the moment it only does find_node queries.
+	//
+	// void bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash)
+	// send_get_hash_query(id, key);
+}
+
+
 	/* finds a queued query, and starts it */
 void bdNodeManager::startQueries()
 {
@@ -1006,44 +1046,6 @@ int bdNodeManager::SearchOutOfDate()
         /***** Functions to Call down to bdNodeManager ****/
         /* Request DHT Peer Lookup */
         /* Request Keyword Lookup */
-
-void bdNodeManager::findDhtValue(bdNodeId * id, std::string key, uint32_t qflags)
-/*
-id the the target node id
-key is the key to find in the DHT
-qflags ...
-*/
-{
-#ifdef DEBUG_MGR
-	std::cerr << "bdNodeManager::findDhtValue()";
-	std::cerr << std::endl;
-#endif
-
-	// TODO: need to add the bdNodeId to active peers,
-	// 		 and then add support in bdquerymgr for the new query type (get hash)
-	//		 so that it can call bdNode::send_get_hash_query()
-	//		 instead of always calling bdNode::send_query()
-	// I'm concerned that the query will not find the closest peer for the hash
-	// beyond the first check in bdQueryManager.addQuery, which does a
-	// mNodeSpace->find_nearest_nodes(id, BITDHT_QUERY_START_PEERS, nearest);
-	// Is the provided bdNodeId here the id that the query is run against?
-	// If not, does bep005 say how the get_hash request works? i.e. it must know from hash how to get the peerid
-
-	// peer.mStatus = BITDHT_QUERY_QUERYING; //QUERYING;
-
-	// Skipping the whole adding to mActivePeers and then using
-	// startQueries() step which normally adds these to mQueryMgr.
-	// [TODO] We may want to remove the disguise flag. Check what qflags are.
-	qflags = qflags | BITDHT_QFLAGS_DISGUISE;
-	mQueryMgr->addQuery(id, qflags);
-
-	// TODO: We need the bdQueryManager to understand peer get hash queries.
-	//		 At the moment it only does find_node queries.
-	//
-	// void bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash)
-	// send_get_hash_query(id, key);
-}
-
 
         /***** Get Results Details *****/
 int bdNodeManager::getDhtPeerAddress(const bdNodeId *id, struct sockaddr_in &from)
