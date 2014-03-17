@@ -374,7 +374,7 @@ virtual void updateKnownPeer(const bdId *id, uint32_t type, uint32_t flags) = 0;
         /***** Request Lookup (DHT Peer & Keyword) *****/
 virtual void addFindNode(bdNodeId *id, uint32_t mode) = 0;
 virtual void removeFindNode(bdNodeId *id) = 0;
-virtual void findDhtValue(bdNodeId *id, std::string key, uint32_t mode) = 0;
+virtual void getHash(bdId &targetNode, bdNodeId &key) = 0;
 
 	/***** Connections Requests *****/
 virtual bool ConnectionRequest(struct sockaddr_in *laddr, bdNodeId *target, uint32_t mode, uint32_t delay, uint32_t start) = 0;
