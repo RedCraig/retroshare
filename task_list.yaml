@@ -240,3 +240,9 @@ paper notes:
 - why is the salt in plaintext, makes it easier to hack/brute force
 - what determines the message type enum values? they must be shared with bittorrent, otherwise the bittorrent nodes wouldn't be able to handle them. The message format must be shared too.
 - retroshare uses a node entry to hold the IP, so they don't actually write to the DHT key:value.
+- if in DHT, how far and to how many clients will the PGP key file be shared?
+  - Is it just one host? do dht nodes share their DHT space as well as their node space? They must do...
+  - what are the odds of your data becoming unavailable in a small DHT network? keep a copy locally just in case?
+    DHT nodes network do not have to be friends, the data should be available assuming the DHT replicates the hash
+    table data amongst nodes. i.e. when nodes go offline their data is already replicated to other nodes in their bucket.
+
