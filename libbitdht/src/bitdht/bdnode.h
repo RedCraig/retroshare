@@ -103,7 +103,7 @@ class bdNodePublisher
 	/* simplified outgoing msg functions (for the managers) */
 	virtual void send_ping(bdId *id) = 0; /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId) = 0; /* message out */
-	virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash) = 0;
+	virtual void send_get_hash_query(bdId &targetNode, bdNodeId &key) = 0;
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status) = 0;
 
@@ -148,7 +148,8 @@ class bdNode: public bdNodePublisher
 	/* simplified outgoing msg functions (for the managers) */
 	virtual void send_ping(bdId *id); /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId); /* message out */
-	virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash);
+	// virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash);
+	virtual void send_get_hash_query(bdId &targetNode, bdNodeId &key);
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 

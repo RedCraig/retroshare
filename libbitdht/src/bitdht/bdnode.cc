@@ -462,19 +462,20 @@ void bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
 }
 
 
-void bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash)
+void bdNode::send_get_hash_query(bdId &targetNode, bdNodeId &key)
+// bdId &targetNode, bdNodeId &key
 {
 	/* push out query */
 	bdToken transId;
 	genNewTransId(&transId);
 
-	msgout_get_hash(id, &transId, info_hash);
+	msgout_get_hash(&targetNode, &transId, &key);
 
 #ifdef DEBUG_NODE_MSGS
 	std::cerr << "bdNode::send_query() get_hash : ";
-	mFns->bdPrintId(std::cerr, &id);
+	mFns->bdPrintId(std::cerr, &targetNode);
 	std::cerr << " hash : ";
-	mFns->bdPrintNodeId(std::cerr, info_hash);
+	mFns->bdPrintNodeId(std::cerr, key);
 	std::cerr << std::endl;
 #endif
 }

@@ -121,11 +121,11 @@ void UdpBitDht::removeFindNode(bdNodeId *id)
 	mBitDhtManager->removeFindNode(id);
 }
 
-void UdpBitDht::findDhtValue(bdNodeId *id, std::string key, uint32_t mode)
+void UdpBitDht::getHash(bdId &id, bdNodeId &key)
 {
 	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/
 
-	mBitDhtManager->findDhtValue(id, key, mode);
+	mBitDhtManager->getHash(id, key);
 }
 
         /***** Add / Remove Callback Clients *****/
