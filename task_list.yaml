@@ -101,12 +101,33 @@ DHT:
         How will this work with our case, when we're returning a single 'file' blob.
         - am just returning the file blob as a single string
 
-  - bdQueryManager only understands find_node queries
-    Need the bdQueryManager to handle peer get hash queries.
+  - Need the bdQueryManager to handle peer get hash queries.
+    - bdQueryManager only understands find_node queries
     - bdQueryManager handles multiple step find_node queries
       (i.e. finding closest to target you know about, it tells you a closer
        node so you query the closer, repeat till you find your actual node)
       but it doesn't do this at all for get_hash queries.
+    - BAH. msgout_reply_hash() will have to handle the situation of the current
+      node not having the hash. If it doesn't have the hash, the node is
+      supposed to return a list of nodes that are the closest it knows about
+      to the peer which should have that hash.
+      - this also means that
+
+  - implement a hash table in libbitdht
+    (╯°□°）╯︵ ┻━┻)
+    it's calling itself a dht with no actual hash table in place
+    libbitdht doesn't actually keep track of ANY hash table. Nothing. WTFF.
+    - need to figure out the logic for bdNodeId -> key
+      so that lookup can determine which node to go to for a specific key
+      - "Two node ID's or a node ID and a key are XORed and the result is the distance between them. ""
+        distance metric between nodeid and key
+        http://en.wikipedia.org/wiki/Kademlia#Accelerated_lookups
+    - then the hash table lookup can just use one node, we don't need to
+      handle the full (find node which has my hash) logic
+    - add support to query manager for get hash query type
+      - will probably need it's own set of steps if i have to add support
+        for finding the actual node using multiple retries
+        (same as existing find node logic, perhaps reuse that first)
 
     - add test code to get_hash()
       - getHash() must specify a bdId to make the request against.
