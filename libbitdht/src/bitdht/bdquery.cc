@@ -47,12 +47,12 @@
  *  1) as replies come in ... maintain list of M closest peers to ID.
  *  2) select non-queried peer from list, and query.
  *  3) halt when we have asked all M closest peers about the ID.
- * 
+ *
  * Flags can be set to disguise the target of the search.
- * This involves 
+ * This involves
  */
 
-bdQuery::bdQuery(const bdNodeId *id, std::list<bdId> &startList, uint32_t queryFlags, 
+bdQuery::bdQuery(const bdNodeId *id, std::list<bdId> &startList, uint32_t queryFlags,
 		bdDhtFunctions *fns)
 {
 	/* */
@@ -118,7 +118,7 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 {
 	if ((mState != BITDHT_QUERY_QUERYING) && !(mQueryFlags & BITDHT_QFLAGS_DO_IDLE))
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         	fprintf(stderr, "NextQuery() Query is done\n");
 #endif
 		return 0;
@@ -147,7 +147,7 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 		/* if never queried */
 		if (it->second.mLastSendTime == 0)
 		{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         		fprintf(stderr, "NextQuery() Found non-sent peer. queryPeer = true : ");
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			std::cerr << std::endl;
@@ -156,28 +156,28 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 		}
 
 		/* re-request every so often */
-		if ((!queryPeer) && (mQueryFlags & BITDHT_QFLAGS_DO_IDLE) && 
+		if ((!queryPeer) && (mQueryFlags & BITDHT_QFLAGS_DO_IDLE) &&
 			(now - it->second.mLastSendTime > mQueryIdlePeerRetryPeriod))
 		{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         		fprintf(stderr, "NextQuery() Found out-of-date. queryPeer = true : ");
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			std::cerr << std::endl;
 #endif
 			queryPeer = true;
 		}
-		
+
 		/* expecting every peer to be up-to-date is too hard...
-		 * enough just to have received lists from each 
+		 * enough just to have received lists from each
 		 * - replacement policy will still work.
 		 *
 		 * Need to wait at least EXPECTED_REPLY, to make sure their answers are pinged
-		 */	
+		 */
 
-		if (((it->second.mLastRecvTime == 0) || (now - it->second.mLastRecvTime < EXPECTED_REPLY)) && 
+		if (((it->second.mLastRecvTime == 0) || (now - it->second.mLastRecvTime < EXPECTED_REPLY)) &&
 				(i < mFns->bdNumQueryNodes()))
 		{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         		fprintf(stderr, "NextQuery() Never Received @Idx(%d) notFinished = true: ", i);
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			std::cerr << std::endl;
@@ -202,7 +202,7 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 			{
 				targetNodeId = mId;
 			}
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         		fprintf(stderr, "NextQuery() Querying Peer: ");
 			mFns->bdPrintId(std::cerr, &id);
 			std::cerr << std::endl;
@@ -212,14 +212,14 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 	}
 
 	/* allow query to run for a minimal amount of time
-	 * This is important as startup - when we might not have any peers.	
+	 * This is important as startup - when we might not have any peers.
 	 * Probably should be handled elsewhere.
 	 */
 	time_t age = now - mQueryTS;
 
 	if (age < BITDHT_MIN_QUERY_AGE)
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
        		fprintf(stderr, "NextQuery() under Min Time: Query not finished / No Query\n");
 #endif
 		return 0;
@@ -227,21 +227,21 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 
 	if (age > BITDHT_MAX_QUERY_AGE)
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
        		fprintf(stderr, "NextQuery() over Max Time: Query force to Finish\n");
 #endif
 		/* fall through and stop */
 	}
 	else if ((mClosest.size() < mFns->bdNumQueryNodes()) || (notFinished))
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
        		fprintf(stderr, "NextQuery() notFinished | !size(): Query not finished / No Query\n");
 #endif
 		/* not full yet... */
 		return 0;
 	}
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	fprintf(stderr, "NextQuery() Finished\n");
 #endif
 
@@ -257,7 +257,7 @@ int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
 	/* check if we found the node */
 	if (mClosest.size() > 0)
 	{
-		if (((mClosest.begin()->second).mPeerId.id == mId) && 
+		if (((mClosest.begin()->second).mPeerId.id == mId) &&
 			((mClosest.begin()->second).mLastRecvTime != 0))
 		{
 			mState = BITDHT_QUERY_SUCCESS;
@@ -285,7 +285,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 
 	mFns->bdDistance(&mId, &(id->id), &dist);
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         fprintf(stderr, "bdQuery::addPeer(");
 	mFns->bdPrintId(std::cerr, id);
         fprintf(stderr, ", %u)\n", mode);
@@ -311,14 +311,14 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 		}
 	}
 		// Counts where we are.
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         fprintf(stderr, "Searching.... %di = %d - %d peers closer than this one\n", i, actualCloser, toDrop);
 #endif
 
 
 	if (i > mClosestListSize - 1)
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         	fprintf(stderr, "Distance to far... dropping\n");
 #endif
 		/* drop it */
@@ -330,7 +330,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 		/* full id check */
 		if (mFns->bdSimilarId(id, &(it->second.mPeerId)))
 		{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         		fprintf(stderr, "Peer Already here!\n");
 #endif
 			if (mode)
@@ -345,7 +345,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 			if (mode & BITDHT_PEER_STATUS_RECV_NODES)
 			{
 				/* only update recvTime if sendTime > checkTime.... (then its our query) */
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 				fprintf(stderr, "Updating LastRecvTime\n");
 #endif
 				it->second.mLastRecvTime = ts;
@@ -355,14 +355,14 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 		}
 	}
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         fprintf(stderr, "Peer not in Query\n");
 #endif
 	/* firstly drop unresponded (bit ugly - but hard structure to extract from) */
 	int j;
 	for(j = 0; j < toDrop; j++)
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         	fprintf(stderr, "Dropping Peer that dont reply\n");
 #endif
 		for(it = mClosest.begin(); it != mClosest.end(); ++it)
@@ -373,7 +373,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 
 			if ((hasSent) && (!hasReply) && (sendts > EXPECTED_REPLY))
 			{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         			fprintf(stderr, "Dropped: ");
 				mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
         			fprintf(stderr, "\n");
@@ -392,7 +392,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 		if (!mClosest.empty())
 		{
 			it--;
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 			fprintf(stderr, "Removing Furthest Peer: ");
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			fprintf(stderr, "\n");
@@ -402,7 +402,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
 		}
 	}
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
         fprintf(stderr, "bdQuery::addPeer(): Closer Peer!: ");
 	mFns->bdPrintId(std::cerr, id);
         fprintf(stderr, "\n");
@@ -430,7 +430,7 @@ int bdQuery::addClosestPeer(const bdId *id, uint32_t mode)
  ********************************* Add Peer Interface  *************************************
  *******************************************************************************************/
 
-/**** These functions are called by bdNode to add peers to the query 
+/**** These functions are called by bdNode to add peers to the query
  * They add/update the three sets of lists.
  *
  * int bdQuery::addPeer(const bdId *id, uint32_t mode)
@@ -493,7 +493,7 @@ int bdQuery::worthyPotentialPeer(const bdId *id)
 	bdMetric dist;
 	mFns->bdDistance(&mId, &(id->id), &dist);
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	std::cerr << "bdQuery::worthyPotentialPeer(";
 	mFns->bdPrintId(std::cerr, id);
 	std::cerr << std::endl;
@@ -511,7 +511,7 @@ int bdQuery::worthyPotentialPeer(const bdId *id)
 	/* check if outside range, & bucket is full  */
 	if ((sit == mClosest.end()) && (mClosest.size() >= mFns->bdNumQueryNodes()))
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 		fprintf(stderr, "Peer to far away for Potential\n");
 #endif
 		return 0; /* too far way */
@@ -523,7 +523,7 @@ int bdQuery::worthyPotentialPeer(const bdId *id)
 		if (mFns->bdSimilarId(id, &(it->second.mPeerId)))
 		{
 			// Not updating Full Peer Id here... as inspection function.
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 			fprintf(stderr, "Peer already in mClosest\n");
 #endif
 			return 0;
@@ -534,14 +534,14 @@ int bdQuery::worthyPotentialPeer(const bdId *id)
 }
 
 
-/***** 
+/*****
  *
  * mLastSendTime ... is the last FIND_NODE_RESPONSE that we returned 1. (indicating to PING).
  * mLastRecvTime ... is the last time we received an updatei about/from them
  *
  * The update is dependent on the flags passed in the function call. (saves duplicate code).
  *
- * 
+ *
  * XXX IMPORTANT TO DECIDE WHAT IS RETURNED HERE.
  * original algorithm return 0 if exists in potential peers, 1 if unknown.
  * This is used to limit the number of pings to non-responding potentials.
@@ -551,7 +551,7 @@ int bdQuery::worthyPotentialPeer(const bdId *id)
  * It is important that the potential Peers list extends all the way back to == mClosest().end().
  * Otherwise we end up with [TARGET] .... [ POTENTIAL ] ..... [ CLOSEST ] ......
  * and the gap between POT and CLOSEST will get hammered with pings.
- * 
+ *
  */
 
 #define MIN_PING_POTENTIAL_PERIOD 300
@@ -583,7 +583,7 @@ int bdQuery::updatePotentialPeer(const bdId *id, uint32_t mode, uint32_t addType
 					return 1;
 				}
 			}
-			else if (mode) 
+			else if (mode)
 			{
 				/* also update port from incoming id, as we have definitely recved from it */
 				if (mFns->bdUpdateSimilarId(&(it->second.mPeerId), id))
@@ -603,7 +603,7 @@ int bdQuery::updatePotentialPeer(const bdId *id, uint32_t mode, uint32_t addType
 	/* check if outside range, & bucket is full  */
 	if ((sit == mPotentialPeers.end()) && (mPotentialPeers.size() >= mFns->bdNumQueryNodes()))
 	{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 		fprintf(stderr, "Peer to far away for Potential\n");
 #endif
 		return 0;
@@ -624,7 +624,7 @@ int bdQuery::updatePotentialPeer(const bdId *id, uint32_t mode, uint32_t addType
 
 	mPotentialPeers.insert(std::pair<bdMetric, bdPeer>(dist, peer));
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	fprintf(stderr, "Flagging as Potential Peer!\n");
 #endif
 
@@ -642,7 +642,7 @@ int bdQuery::trimPotentialPeers_FixedLength()
 		std::multimap<bdMetric, bdPeer>::iterator it;
 		it = mPotentialPeers.end();
 		it--; // must be more than 1 peer here?
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 		fprintf(stderr, "Removing Furthest Peer: ");
 		mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 		fprintf(stderr, "\n");
@@ -661,7 +661,7 @@ int bdQuery::trimPotentialPeers_toClosest()
 	std::multimap<bdMetric, bdPeer>::reverse_iterator it;
 	it = mClosest.rbegin();
 	bdMetric lastClosest = it->first;
-	
+
 	/* trim it back */
 	while(mPotentialPeers.size() > (uint32_t) (mFns->bdNumQueryNodes()))
 	{
@@ -670,7 +670,7 @@ int bdQuery::trimPotentialPeers_toClosest()
 		it--; // must be more than 1 peer here?
 		if (lastClosest < it->first)
 		{
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 			fprintf(stderr, "Removing Furthest Peer: ");
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			fprintf(stderr, "\n");
@@ -717,8 +717,8 @@ int bdQuery::removeOldPotentialPeers()
 	{
 		/* which timestamp do we care about? */
 		if (now - it->second.mLastRecvTime > POT_PEER_RECV_TIMEOUT_PERIOD)
-		{ 
-#ifdef DEBUG_QUERY 
+		{
+#ifdef DEBUG_QUERY
 			std::cerr << "bdQuery::removeOldPotentialPeers() removing: ";
 			mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
 			fprintf(stderr, "\n");
@@ -753,11 +753,11 @@ int bdQuery::removeOldPotentialPeers()
  * So there are two options:
  *   1) Track everythings mode history - which is a waste of resources.
  *   2) Store the list, and ping later.
- *   
+ *
  * We will store these in two lists: Flags & Unknown.
  * we keep the most recent of each, and move around as required.
  *
- * we could also check the Closest/PotentialPeer lists to grab the flags, 
+ * we could also check the Closest/PotentialPeer lists to grab the flags,
  * for an unknown peer?
  *
  * All Functions manipulating PotentialProxies are here.
@@ -804,9 +804,9 @@ int bdQuery::addProxy(const bdId *id, const bdId *src, uint32_t srcmode)
 {
 	bdMetric dist;
 	time_t now = time(NULL);
-	
+
 	mFns->bdDistance(&mId, &(id->id), &dist);
-	
+
 	/* finally if it is an exact match, add as potential proxy */
 	int bucket = mFns->bdBucketDistance(&dist);
 	if ((bucket != 0) || (src == NULL))
@@ -815,7 +815,7 @@ int bdQuery::addProxy(const bdId *id, const bdId *src, uint32_t srcmode)
 		return 0;
 	}
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	fprintf(stderr, "Bucket = 0, Have Potential Proxy!\n");
 #endif
 
@@ -836,7 +836,7 @@ int bdQuery::addProxy(const bdId *id, const bdId *src, uint32_t srcmode)
 	if (!found)
 	{
 		/* if we get here. its not in the list */
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 		fprintf(stderr, "Adding Source to Proxy List:\n");
 #endif
 		bdPeer peer;
@@ -845,7 +845,7 @@ int bdQuery::addProxy(const bdId *id, const bdId *src, uint32_t srcmode)
 		peer.mLastSendTime = 0;
 		peer.mLastRecvTime = now;
 		peer.mFoundTime = now;
-	
+
 		/* add it in */
 		if ((srcmode & mRequiredPeerFlags) == mRequiredPeerFlags)
 		{
@@ -857,9 +857,9 @@ int bdQuery::addProxy(const bdId *id, const bdId *src, uint32_t srcmode)
 		}
 	}
 
-	
+
 	trimProxies();
-	
+
 	return 1;
 }
 
@@ -886,7 +886,7 @@ int bdQuery::updateProxyList(const bdId *id, uint32_t mode, std::list<bdPeer> &s
 		if (mFns->bdSimilarId(id, &(it->mPeerId)))
 		{
 			/* found it ;( */
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 			std::cerr << "bdQuery::updateProxyList() Found peer, updating";
 			std::cerr << std::endl;
 #endif
@@ -958,10 +958,10 @@ int bdQuery::trimProxies()
 
 int     bdQuery::printQuery()
 {
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	fprintf(stderr, "bdQuery::printQuery()\n");
 #endif
-	
+
 	time_t ts = time(NULL);
 	fprintf(stderr, "Query for: ");
 	mFns->bdPrintNodeId(std::cerr, &mId);
@@ -973,7 +973,7 @@ int     bdQuery::printQuery()
 	}
 	fprintf(stderr, "\n");
 
-#ifdef DEBUG_QUERY 
+#ifdef DEBUG_QUERY
 	fprintf(stderr, "Closest Available Peers:\n");
 	std::multimap<bdMetric, bdPeer>::iterator it;
 	for(it = mClosest.begin(); it != mClosest.end(); it++)
@@ -1003,7 +1003,7 @@ int     bdQuery::printQuery()
 #else
 	// shortened version.
 	fprintf(stderr, "Closest Available Peer: ");
-	std::multimap<bdMetric, bdPeer>::iterator it = mClosest.begin(); 
+	std::multimap<bdMetric, bdPeer>::iterator it = mClosest.begin();
 	if (it != mClosest.end())
 	{
 		mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
@@ -1016,7 +1016,7 @@ int     bdQuery::printQuery()
 	fprintf(stderr, "\n");
 
 	fprintf(stderr, "Closest Potential Peer: ");
-	it = mPotentialPeers.begin(); 
+	it = mPotentialPeers.begin();
 	if (it != mPotentialPeers.end())
 	{
 		mFns->bdPrintId(std::cerr, &(it->second.mPeerId));
@@ -1041,7 +1041,7 @@ int     bdQuery::printQuery()
 		fprintf(stderr," LastRecv: %ld ago", ts-lit->mLastRecvTime);
 		fprintf(stderr, "\n");
 	}
-	
+
 	fprintf(stderr, "Potential Proxies:\n");
 	for(lit = mProxiesUnknown.begin(); lit != mProxiesUnknown.end(); lit++)
 	{
@@ -1171,7 +1171,7 @@ void bdQueryHistory::cleanupOldMsgs()
 	}
 }
 
-	
+
 void bdQueryHistory::printMsgs()
 {
 	std::ostream &out = std::cerr;
