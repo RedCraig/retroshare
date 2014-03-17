@@ -9,7 +9,6 @@
 #include <cstring>      // strlen
 #include "Storage.h"
 #include "bitdht/bdiface.h"
-#include "bitdht/bdnode.h"
 
 
 void writeFKSFile(char* data, int dataLen, char* filename,
@@ -61,20 +60,18 @@ void readFileFromDisk(const char* const filename,
     }
 }
 
-// TODO: getHash
-void getHash(bdNode *const node,
-             const unsigned char *const info_hash)
+void getHash(bdNode &node, const unsigned char *const key)
 {
-    // TODO: look at where bdNode.cc:: send_query() is called, and how the
-    //       bdId and bdNodeId is formed for that call.
-    // bdId and bdNodeId are defined in <libbitdht/src/bitdht/bdiface.h>
+    // TODO: do we call find_node here (and wait for it to finish)
+    //   so that we have a bdId to make the request against?
+    //   Or do we make this fn expect a bdId targetNode, and perform the
+    //   find_node search outside of here.
     bdId id;
 
     bdNodeId nodeId;
-    memcpy(nodeId.data, info_hash, BITDHT_KEY_LEN);
+    memcpy(nodeId.data, key, BITDHT_KEY_LEN);
 
-    // bdNode::send_get_hash_query(bdId *id, bdNodeId *const info_hash);
-    node->send_get_hash_query(&id, &nodeId);
+    node.send_get_hash_query(id, nodeId);
 }
 
 // TODO: getHashCallback

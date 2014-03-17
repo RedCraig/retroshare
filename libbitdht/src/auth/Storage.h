@@ -12,7 +12,7 @@
 #include <list>
 #include <string>  // string, strlen
 
-class bdNode;
+#include "bitdht/bdnode.h"
 
 // write data to disk.
 void writeFileToDisk(char* data, int dataLen, char* filename);
@@ -40,8 +40,10 @@ void readFileFromDisk(const char* const filename,
                       char* buf, unsigned int &bufLen);
 
 // Make a request to the DHT to get the key:value, where key is info_hash.
-void getHash(bdNode *const node,
-             const unsigned char *const info_hash);
+// void getHash(bdNode *const node,
+             // const unsigned char *const info_hash);
+
+void getHash(bdNode &node, const unsigned char *const key);
 
 // The callback fn for getHash, returns a list of strings
 void getHashCallback(std::list<std::string> &values);
