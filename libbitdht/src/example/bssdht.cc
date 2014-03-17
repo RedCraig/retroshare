@@ -2,6 +2,7 @@
 #include "bootstrap_fn.h"
 #include <iostream>
 #include <inttypes.h>
+#include <unistd.h>
 
 void args(char *name)
 {
@@ -28,7 +29,7 @@ int main(int argc, char **argv)
 	uint16_t port;
 	int c;
 	bool havePeerId = false;
-	
+
 
 	while((c = getopt(argc, argv,"p:")) != -1)
 	{
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	
+
         std::cerr << "bssdht: starting up";
 	std::cerr << std::endl;
 
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
 }
 
 
-		
+
 
 
 
