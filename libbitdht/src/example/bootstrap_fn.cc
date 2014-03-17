@@ -1,4 +1,4 @@
-
+#include <unistd.h>
 
 #include "bitdht/bdiface.h"
 #include "bitdht/bdstddht.h"
@@ -55,10 +55,10 @@ bool bdSingleShotFindPeer(const std::string bootstrapfile, const std::string pee
 	if ((status == BITDHT_QUERY_PEER_UNREACHABLE) ||
 		(status == BITDHT_QUERY_SUCCESS))
 	{
-	
+
 		peer_ip = bdnet_inet_ntoa(resultId.addr.sin_addr);
 		peer_port = ntohs(resultId.addr.sin_port);
-	
+
 		std::cerr << "Answer: ";
 		std::cerr << std::endl;
 		std::cerr << "\tPeer IpAddress: " << peer_ip;
@@ -76,7 +76,7 @@ bool bdSingleShotFindPeer(const std::string bootstrapfile, const std::string pee
 }
 
 
-		
+
 
 
 
