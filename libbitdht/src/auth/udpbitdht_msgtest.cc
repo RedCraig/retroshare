@@ -29,6 +29,8 @@
 #include "bitdht/bdstddht.h"
 #include "bitdht/bdmanager.h"
 
+#include "bdHandler.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -46,6 +48,43 @@
 #define MAX_DEF_PORT    16000
 #define DEF_BOOTFILE    "localboot.txt"
 
+
+bool findNode(BitDhtHandler &bitdhtHandler,
+              UdpBitDht *udpBitDht,
+              const std::string findPeerName,
+              bdId &resultId)
+{
+    /* install search node */
+    bdNodeId searchId;
+    if (!bdStdLoadNodeId(&searchId, findPeerName))
+    {
+        std::cerr << "findNode(): Invalid findPeerName: " << findPeerName;
+        return false;
+    }
+
+    std::cerr << "searching for Id: ";
+    bdStdPrintNodeId(std::cerr, &searchId);
+    std::cerr << std::endl;
+
+    // bool BitDhtHandler::FindNode(UdpBitDht &udpBitDht, bdNodeId *peerId)
+    bitdhtHandler.FindNode(udpBitDht, &searchId);
+
+    // bdId resultId;
+    uint32_t status;
+    resultId.id = searchId;
+
+    while(false == bitdhtHandler.SearchResult(&resultId, status))
+    {
+        sleep(10);
+    }
+
+    std::cerr << "findNode(): Found Result:" << std::endl;
+    std::cerr << "\tId: ";
+    bdStdPrintId(std::cerr, &resultId);
+    std::cerr << std::endl;
+
+    return true;
+}
 
 int args(char *name)
 {
@@ -187,9 +226,7 @@ int main(int argc, char **argv)
 
 
 
-
     /* do a couple of random continuous searchs. */
-
     uint32_t mode = BITDHT_QFLAGS_DO_IDLE;
 
     int count = 0;
@@ -198,6 +235,8 @@ int main(int argc, char **argv)
     std::cerr << "Starting Dht: ";
     std::cerr << std::endl;
     bitdht->startDht();
+
+
 
 
     if (doRandomQueries)
@@ -212,7 +251,6 @@ int main(int argc, char **argv)
             std::cerr << std::endl;
 
             bitdht->addFindNode(&rndId, mode);
-
         }
     }
 
@@ -231,8 +269,39 @@ int main(int argc, char **argv)
             // bdNodeId *id, std::string key, uint32_t mode )
             // our node ID, the key we're looking for, mode
             // TODO: MODE? WHAT NOW?
-            bitdht->findDhtValue(&id, "testhash", 1);
+
+            // make query, callback and results class
+            BitDhtHandler bitdhtHandler;
+
+            // bool findNode(UdpBitDht &bitdht,
+            //               const std::string findPeerName,
+            //               bdId &resultId)
+            bdId resultId;
+            std::string findPeerName = "87040ccafa36d6e5c77950cfb36ca2407284c807";
+
+            findNode(bitdhtHandler, bitdht, findPeerName, resultId);
+
+            std::cerr << "bdSingleShotFindPeer(): Found Result:" << std::endl;
+
+            std::cerr << "\tId: ";
+            bdStdPrintId(std::cerr, &resultId);
+            std::cerr << std::endl;
+
+            std::cerr << "Answer: ";
+            std::cerr << std::endl;
+            std::cerr << "\tPeer IpAddress: " << bdnet_inet_ntoa(resultId.addr.sin_addr);
+            std::cerr << std::endl;
+            std::cerr << "\tPeer Port: " << ntohs(resultId.addr.sin_port);
+            std::cerr << std::endl;
         }
+
+        // find node that key is on
+
+        // do a get hash on the node that key is on
+        bdNodeId key;
+        memcpy(key.data, "test hash", 9);
+        bdId targetNode;
+        bitdht->getHash(targetNode, key);
 
         std::cerr << "Dht Network Size: ";
         std::cerr << bitdht->statsNetworkSize();
@@ -282,5 +351,6 @@ int main(int argc, char **argv)
             }
         }
     }
+
     return 1;
 }
