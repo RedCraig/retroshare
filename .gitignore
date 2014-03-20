@@ -41,3 +41,6 @@ libbitdht/src/auth/tests
 libbitdht/src/auth/udpbitdht_msgtest
 libbitdht/src/example/bssdht
 time_tracker.txt
+libbitdht/src/tests/udpbitdht_nettest.bak
+
+libbitdht/src/auth/udpbitdht_msgtest_good
