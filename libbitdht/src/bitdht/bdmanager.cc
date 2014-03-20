@@ -697,16 +697,15 @@ int bdNodeManager::status()
 {
 	/* do status of bdNode */
 #ifdef DEBUG_MGR
-	printState();
 #endif
+	printState();
 
 	checkStatus();
 	checkBadPeerStatus();
 
 	/* update the network numbers */
 	mNetworkSize = mNodeSpace.calcNetworkSize();
-	mBdNetworkSize = mNodeSpace.calcNetworkSizeWithFlag(
-					LOCAL_NET_FLAG);
+	mBdNetworkSize = mNodeSpace.calcNetworkSizeWithFlag(LOCAL_NET_FLAG);
 
 #ifdef DEBUG_MGR
 	std::cerr << "BitDHT NetworkSize: " << mNetworkSize << std::endl;
@@ -724,9 +723,18 @@ int bdNodeManager::checkStatus()
 	std::cerr << std::endl;
 #endif
 
+
+	// get hash result hack to avoid using querymanager for now
+	if(mGetHashResultReady == true)
+	{
+		// void 	doValueCallback(const bdId *id, std::string key, uint32_t status);
+		doValueCallback(&mGetHashBdId, mGetHashKey, 0);
+	}
+
+
 	/* check queries */
-        std::map<bdNodeId, bdQueryStatus>::iterator it;
-        std::map<bdNodeId, bdQueryStatus> queryStatus;
+	std::map<bdNodeId, bdQueryStatus>::iterator it;
+	std::map<bdNodeId, bdQueryStatus> queryStatus;
 
 
 	mQueryMgr->QueryStatus(queryStatus);
@@ -1205,7 +1213,7 @@ void bdNodeManager::doPeerCallback(const bdId *id, uint32_t status)
         return;
 }
 
-void bdNodeManager::doValueCallback(const bdNodeId *id, std::string key, uint32_t status)
+void bdNodeManager::doValueCallback(const bdId *id, std::string key, uint32_t status)
 {
 	std::cerr << "bdNodeManager::doValueCallback()";
 	std::cerr << std::endl;
@@ -1368,7 +1376,7 @@ int bdDebugCallback::dhtPeerCallback(const bdId *id, uint32_t status)
 	return 1;
 }
 
-int bdDebugCallback::dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status)
+int bdDebugCallback::dhtValueCallback(const bdId *id, std::string key, uint32_t status)
 {
 	/* remove unused parameter warnings */
 	(void) key;
@@ -1377,7 +1385,7 @@ int bdDebugCallback::dhtValueCallback(const bdNodeId *id, std::string key, uint3
 #ifdef DEBUG_MGR
 	std::cerr << "bdDebugCallback::dhtValueCallback() Id: ";
 #endif
-	bdStdPrintNodeId(std::cerr, id);
+	bdStdPrintId(std::cerr, id);
 #ifdef DEBUG_MGR
 	std::cerr << " key: " << key;
 	std::cerr << " status: " << std::hex << status << std::dec << std::endl;

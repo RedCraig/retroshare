@@ -349,7 +349,7 @@ class BitDhtCallback
 
         // must be implemented.
         virtual int dhtPeerCallback(const bdId *id, uint32_t status) = 0;
-        virtual int dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status) = 0;
+        virtual int dhtValueCallback(const bdId *id, std::string key, uint32_t status) = 0;
 
         // connection callback. Not required for basic behaviour, but forced for initial development.
         virtual int dhtConnectCallback(const bdId *srcId, const bdId *proxyId, const bdId *destId,
