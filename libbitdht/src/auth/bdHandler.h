@@ -59,23 +59,17 @@ public:
     // poll this function to check if we have a result
     bool SearchResult(bdId *id, uint32_t &status);
 
+    virtual int dhtValueCallback(const bdId *id, std::string key, uint32_t status);
 
     // must implement these to satify abstract base class
     virtual int dhtNodeCallback(const bdId *id, uint32_t peerflags)
     {
         return 1;
     }
-
-    virtual int dhtValueCallback(const bdNodeId *id, std::string key, uint32_t status)
-    {
-        return 1;
-    }
-
     virtual int dhtConnectCallback(const bdId*, const bdId*, const bdId*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)
     {
         return 1;
     }
-
     virtual int dhtInfoCallback(const bdId*, uint32_t, uint32_t, std::string)
     {
         return 1;

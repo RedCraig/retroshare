@@ -67,8 +67,30 @@ bool BitDhtHandler::FindNode(UdpBitDht *udpBitDht, bdNodeId *peerId)
 
     BssResult res;
     res.id.id = *peerId;
-    // res.mode = BITDHT_QFLAGS_DISGUISE;
-    res.mode = BITDHT_QFLAGS_NONE;
+    res.mode = BITDHT_QFLAGS_DISGUISE;
+    // res.mode = BITDHT_QFLAGS_NONE;
+
+    res.status = 0;
+    {
+        bdStackMutex stack(resultsMtx);
+        mSearchNodes[*peerId] = res;
+    }
+
+    udpBitDht->addFindNode(peerId, BITDHT_QFLAGS_DISGUISE);
+
+    return true ;
+}
+
+bool BitDhtHandler::GetHash(UdpBitDht *udpBitDht, bdNodeId *peerId)
+{
+    std::cerr << "BitDhtHandler::FindNode(";
+    bdStdPrintNodeId(std::cerr, peerId);
+    std::cerr << ")" << std::endl;
+
+    BssResult res;
+    res.id.id = *peerId;
+    res.mode = BITDHT_QFLAGS_DISGUISE;
+    // res.mode = BITDHT_QFLAGS_NONE;
 
     res.status = 0;
     {
@@ -158,5 +180,32 @@ int BitDhtHandler::dhtPeerCallback(const bdId *id, uint32_t status)
             it->second.id = *id;
         break;
     }
+    return 1;
+}
+
+int BitDhtHandler::dhtValueCallback(const bdId *id, std::string key, uint32_t status)
+{
+    std::cerr << "BitDhtHandler::PeerCallback() NodeId: ";
+    bdStdPrintId(std::cerr, id);
+    std::cerr << std::endl;
+
+    bdStackMutex stack(resultsMtx); /********** MUTEX LOCKED *************/
+    std::cerr << "HOLY SHITBALLS got a key back: " << key << std::endl;
+
+    // /* find the node from our list */
+    // std::map<bdNodeId, BssResult>::iterator it;
+    // it = mSearchNodes.find(id->id);
+    // if (it == mSearchNodes.end())
+    // {
+    //     std::cerr << "BitDhtHandler::PeerCallback() Unknown NodeId !!! ";
+    //     std::cerr << std::endl;
+
+    //     return 1;
+    // }
+    // it->second.status = status;
+
+    // switch(status)
+    // {
+    // }
     return 1;
 }
