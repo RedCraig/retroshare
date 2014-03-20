@@ -273,6 +273,11 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 	bdQueryHistory mQueryHistory; /* for determining old peers */
 
+	bool mGetHashResultReady;
+	bdId mGetHashBdId;
+	std::string mGetHashKey;
+
+
 	private:
 
 	uint32_t mNodeOptionFlags;
@@ -288,6 +293,9 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 	std::list<bdNodeNetMsg *> mOutgoingMsgs;
 	std::list<bdNodeNetMsg *> mIncomingMsgs;
+
+
+	bdQuery *mGetHashQueryResult;
 
 };
 

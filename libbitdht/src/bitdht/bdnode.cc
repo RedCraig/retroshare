@@ -69,7 +69,7 @@
 //#define DISABLE_BAD_PEER_FILTER		1
 
 //#define USE_HISTORY	1
-
+// #define DEBUG_NODE_MSGS 1
 #define HISTORY_PERIOD  60
 
 bdNode::bdNode(bdNodeId *ownId, std::string dhtVersion, std::string bootfile, bdDhtFunctions *fns)
@@ -454,9 +454,9 @@ void bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
 
 #ifdef DEBUG_NODE_MSGS
 	std::cerr << "bdNode::send_query() Find Node Req for : ";
-	mFns->bdPrintId(std::cerr, &id);
+	mFns->bdPrintId(std::cerr, id);
 	std::cerr << " searching for : ";
-	mFns->bdPrintNodeId(std::cerr, &targetNodeId);
+	mFns->bdPrintNodeId(std::cerr, 	targetNodeId);
 	std::cerr << std::endl;
 #endif
 }
@@ -475,7 +475,7 @@ void bdNode::send_get_hash_query(bdId &targetNode, bdNodeId &key)
 	std::cerr << "bdNode::send_query() get_hash : ";
 	mFns->bdPrintId(std::cerr, &targetNode);
 	std::cerr << " hash : ";
-	mFns->bdPrintNodeId(std::cerr, key);
+	mFns->bdPrintNodeId(std::cerr, &key);
 	std::cerr << std::endl;
 #endif
 }
@@ -491,7 +491,7 @@ void bdNode::send_connect_msg(bdId *id, int msgtype, bdId *srcAddr, bdId *destAd
 
 #ifdef DEBUG_NODE_MSGS
 	std::cerr << "bdNode::send_connect_msg() to: ";
-	mFns->bdPrintId(std::cerr, &id);
+	mFns->bdPrintId(std::cerr, id);
 	std::cerr << std::endl;
 #endif
 }
@@ -932,7 +932,7 @@ void bdNode::msgout_pong(bdId *id, bdToken *transId)
 
 void bdNode::msgout_find_node(bdId *id, bdToken *transId, bdNodeId *query)
 {
-#ifdef DEBUG_NODE_MSGOUT
+#ifdef DEBUG_NODE_MSGS
 	std::cerr << "bdNode::msgout_find_node() TransId: ";
 	bdPrintTransId(std::cerr, transId);
 	std::cerr << " To: ";
@@ -1981,13 +1981,28 @@ void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token,
 	}
 	std::cerr << std::endl;
 #else
-	(void) id;
-	(void) transId;
-	(void) token;
-	(void) values;
+	// (void) id;
+	// (void) transId;
+	// (void) token;
+	// (void) values;
+
+	// lets short circuit the query manager and call the callback now
+	// it'll slow UDP stack, but so what.
+
+	// time_t now = time(NULL);
+	// pit->second.mCallbackTS = now;
+	// bdId id(it->first,pit->second.mDhtAddr);
+	// doPeerCallback(&id, callbackStatus);
+
+	// bdNodeManager
+	std::string key = values.front();
+	// doValueCallback(id, key, status)
+	mGetHashResultReady = true;
+	mGetHashBdId = *id;
+	std::string mGetHashKey = key;
 
 	// bitdht/auth/Storage::getHashCallback()
-	getHashCallback(values);
+	// getHashCallback(values);
 #endif
 }
 
