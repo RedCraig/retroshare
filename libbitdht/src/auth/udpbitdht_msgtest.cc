@@ -86,6 +86,12 @@ bool findNode(BitDhtHandler &bitdhtHandler,
     return true;
 }
 
+int getHash(bitdhtHandler, bitdht, targetNode, key)
+{
+    bitdht->getHash(targetNode, key);
+    return 1;
+}
+
 int args(char *name)
 {
     std::cerr << "Usage: " << name;
@@ -95,6 +101,7 @@ int args(char *name)
     std::cerr << " -q <num_queries>";
     std::cerr << " -r  (do dht restarts) ";
     std::cerr << " -j  (do join test) ";
+    std::cerr << " -f <findPeerName, e.g., b8033e8acab57e170b612372727b38a60f28b76e>";
     std::cerr << std::endl;
     return 1;
 }
@@ -110,8 +117,9 @@ int main(int argc, char **argv)
     bool doRestart = false;
     bool doThreadJoin = false;
     int noQueries = 0;
+    std::string findPeerName;
 
-    while((c = getopt(argc, argv,"rjp:b:u:q:")) != -1)
+    while((c = getopt(argc, argv,"rjp:b:u:q:f:")) != -1)
     {
         switch (c)
         {
@@ -163,14 +171,27 @@ int main(int argc, char **argv)
                 std::cerr << std::endl;
             }
             break;
-
+            case 'f':
+            {
+                findPeerName = optarg;
+                std::cerr << "findPeerName: " << findPeerName;
+                std::cerr << std::endl;
+            }
+            break;
             default:
             {
+                std::cerr << "default = fail?" << std::endl;
+
                 args(argv[0]);
                 return 1;
             }
             break;
         }
+    }
+    if(findPeerName.length() == 0)
+    {
+        args(argv[0]);
+        return 1;
     }
 
 
@@ -205,6 +226,7 @@ int main(int argc, char **argv)
     local.sin_family = AF_INET;
     local.sin_addr.s_addr = 0;
     local.sin_port = htons(port);
+
     UdpStack *udpstack = new UdpStack(local);
 
     /* create bitdht component */
@@ -216,18 +238,23 @@ int main(int argc, char **argv)
     /* add in the stack */
     udpstack->addReceiver(bitdht);
 
+
+    // make our callback handler class (which also makes the query)
+    BitDhtHandler bitdhtHandler;
     /* register callback display */
-    bdDebugCallback *cb = new bdDebugCallback();
-    bitdht->addCallback(cb);
+    // BitDhtHandler *bitDhtHandler = new BitDhtHandler();
+    bitdht->addCallback(&bitdhtHandler);
 
     /* startup threads */
     //udpstack->start();
     bitdht->start();
 
 
+    /* setup best mode for quick search */
+    uint32_t dhtFlags = BITDHT_MODE_TRAFFIC_HIGH | BITDHT_MODE_RELAYSERVERS_IGNORED;
+    bitdht->setDhtMode(dhtFlags);
+    bitdht->setAttachMode(false);
 
-    /* do a couple of random continuous searchs. */
-    uint32_t mode = BITDHT_QFLAGS_DO_IDLE;
 
     int count = 0;
     int running = 1;
@@ -235,9 +262,6 @@ int main(int argc, char **argv)
     std::cerr << "Starting Dht: ";
     std::cerr << std::endl;
     bitdht->startDht();
-
-
-
 
     if (doRandomQueries)
     {
@@ -250,10 +274,11 @@ int main(int argc, char **argv)
             bdStdPrintNodeId(std::cerr, &rndId);
             std::cerr << std::endl;
 
-            bitdht->addFindNode(&rndId, mode);
+            bitdht->addFindNode(&rndId, BITDHT_QFLAGS_DO_IDLE);
         }
     }
 
+    bool foundNode = false;
     while(1)
     {
         sleep(10);
@@ -263,45 +288,41 @@ int main(int argc, char **argv)
         std::cerr << std::endl;
         if(bitdht->stateDht() == BITDHT_MGR_STATE_ACTIVE)
         {
+
             std::cerr << "BITDHT_MGR_STATE_ACTIVE" << std::endl;
             bitdht->printDht();
 
-            // bdNodeId *id, std::string key, uint32_t mode )
-            // our node ID, the key we're looking for, mode
-            // TODO: MODE? WHAT NOW?
+            if(foundNode == false)
+            {
+                // bdNodeId *id, std::string key, uint32_t mode )
+                // our node ID, the key we're looking for, mode
+                // TODO: MODE? WHAT NOW?
 
-            // make query, callback and results class
-            BitDhtHandler bitdhtHandler;
+                bdId resultId;
 
-            // bool findNode(UdpBitDht &bitdht,
-            //               const std::string findPeerName,
-            //               bdId &resultId)
-            bdId resultId;
-            std::string findPeerName = "87040ccafa36d6e5c77950cfb36ca2407284c807";
+                findNode(bitdhtHandler, bitdht, findPeerName, resultId);
 
-            findNode(bitdhtHandler, bitdht, findPeerName, resultId);
+                std::cerr << "bdSingleShotFindPeer(): Found Result:" << std::endl;
+                std::cerr << "\tId: ";
+                bdStdPrintId(std::cerr, &resultId);
+                std::cerr << std::endl;
+                std::cerr << "Answer: ";
+                std::cerr << std::endl;
+                std::cerr << "\tPeer IpAddress: " << bdnet_inet_ntoa(resultId.addr.sin_addr);
+                std::cerr << std::endl;
+                std::cerr << "\tPeer Port: " << ntohs(resultId.addr.sin_port);
+                std::cerr << std::endl;
 
-            std::cerr << "bdSingleShotFindPeer(): Found Result:" << std::endl;
+                foundNode = true;
+            }
 
-            std::cerr << "\tId: ";
-            bdStdPrintId(std::cerr, &resultId);
-            std::cerr << std::endl;
+            bdId targetNode = resultId;
+            bdNodeId key;
+            memcpy(key.data, "test hash", 9);
+            getHash(bitdhtHandler, bitdht, targetNode, key);
+			// bitdht->getHash(resultId, key);
 
-            std::cerr << "Answer: ";
-            std::cerr << std::endl;
-            std::cerr << "\tPeer IpAddress: " << bdnet_inet_ntoa(resultId.addr.sin_addr);
-            std::cerr << std::endl;
-            std::cerr << "\tPeer Port: " << ntohs(resultId.addr.sin_port);
-            std::cerr << std::endl;
         }
-
-        // find node that key is on
-
-        // do a get hash on the node that key is on
-        bdNodeId key;
-        memcpy(key.data, "test hash", 9);
-        bdId targetNode;
-        bitdht->getHash(targetNode, key);
 
         std::cerr << "Dht Network Size: ";
         std::cerr << bitdht->statsNetworkSize();
@@ -311,11 +332,6 @@ int main(int argc, char **argv)
         std::cerr << bitdht->statsBDVersionSize();
         std::cerr << std::endl;
 
-        if (++count == 2)
-        {
-            /* switch to one-shot searchs */
-            mode = 0;
-        }
 
         if (doThreadJoin)
         {
