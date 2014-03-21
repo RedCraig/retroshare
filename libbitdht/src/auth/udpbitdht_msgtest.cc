@@ -86,7 +86,10 @@ bool findNode(BitDhtHandler &bitdhtHandler,
     return true;
 }
 
-int getHash(bitdhtHandler, bitdht, targetNode, key)
+int getHash(BitDhtHandler &bitdhtHandler,
+            UdpBitDht *bitdht,
+            bdId &targetNode,
+            bdNodeId key)
 {
     bitdht->getHash(targetNode, key);
     return 1;
@@ -292,14 +295,9 @@ int main(int argc, char **argv)
             std::cerr << "BITDHT_MGR_STATE_ACTIVE" << std::endl;
             bitdht->printDht();
 
+            bdId resultId;
             if(foundNode == false)
             {
-                // bdNodeId *id, std::string key, uint32_t mode )
-                // our node ID, the key we're looking for, mode
-                // TODO: MODE? WHAT NOW?
-
-                bdId resultId;
-
                 findNode(bitdhtHandler, bitdht, findPeerName, resultId);
 
                 std::cerr << "bdSingleShotFindPeer(): Found Result:" << std::endl;
