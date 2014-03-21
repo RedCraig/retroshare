@@ -359,8 +359,8 @@ void bdNodeManager::iteration()
 			 * if, after 60 secs, we haven't reached MIN_OP_SPACE_SIZE, restart....
 			 */
 
-#define TRANSITION_OP_SPACE_SIZE	50 /* 1 query / sec, should take 12-15 secs */
-#define MAX_FINDSELF_TIME		180 /* increased, as std rate has been dropped */
+#define TRANSITION_OP_SPACE_SIZE	2 /* 1 query / sec, should take 12-15 secs */
+#define MAX_FINDSELF_TIME		20 /* increased, as std rate has been dropped */
 // #define MIN_OP_SPACE_SIZE		10
 // testing parameters.
 //#define MAX_FINDSELF_TIME		10
