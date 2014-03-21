@@ -52,14 +52,15 @@ public:
 
     // start the find_node request
     bool FindNode(UdpBitDht *udpBitDht, bdNodeId *peerId);
+    bool GetHash(UdpBitDht *udpBitDht, bdId *targetNode, bdNodeId *key);
 
     // callbacks for find_node response
     virtual int dhtPeerCallback(const bdId *id, uint32_t status);
+    virtual int dhtValueCallback(const bdId *id, std::string key, uint32_t status);
 
     // poll this function to check if we have a result
     bool SearchResult(bdId *id, uint32_t &status);
 
-    virtual int dhtValueCallback(const bdId *id, std::string key, uint32_t status);
 
     // must implement these to satify abstract base class
     virtual int dhtNodeCallback(const bdId *id, uint32_t peerflags)

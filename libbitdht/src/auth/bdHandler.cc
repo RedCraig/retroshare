@@ -81,24 +81,23 @@ bool BitDhtHandler::FindNode(UdpBitDht *udpBitDht, bdNodeId *peerId)
     return true ;
 }
 
-bool BitDhtHandler::GetHash(UdpBitDht *udpBitDht, bdNodeId *peerId)
+bool BitDhtHandler::GetHash(UdpBitDht *udpBitDht,
+                            bdId *targetNode,
+                            bdNodeId *key)
 {
-    std::cerr << "BitDhtHandler::FindNode(";
-    bdStdPrintNodeId(std::cerr, peerId);
-    std::cerr << ")" << std::endl;
+    std::cerr << "BitDhtHandler::getHash(";
+    bdStdPrintId(std::cerr, targetNode);
+    std::cerr << ", key: " << key << ")" << std::endl;
 
     BssResult res;
-    res.id.id = *peerId;
+    res.id.id = targetNode->id;
     res.mode = BITDHT_QFLAGS_DISGUISE;
-    // res.mode = BITDHT_QFLAGS_NONE;
-
     res.status = 0;
-    {
-        bdStackMutex stack(resultsMtx);
-        mSearchNodes[*peerId] = res;
-    }
 
-    udpBitDht->addFindNode(peerId, BITDHT_QFLAGS_DISGUISE);
+    // add results vars
+    // bdStackMutex stack(resultsMtx);
+    // virtual void getHash(bdId &id, bdNodeId &key);
+    udpBitDht->getHash(*targetNode, *key);
 
     return true ;
 }
