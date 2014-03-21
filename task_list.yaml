@@ -129,6 +129,13 @@ DHT:
         for finding the actual node using multiple retries
         (same as existing find node logic, perhaps reuse that first)
 
+
+  - finish bdHandler::BitDhtHandler::GetHash
+  - finish getHash in auth/udp msgtest
+  - passing get_hash a targetNodeId, is this used when creatig the msgoug_get_hash?
+
+
+
     - add test code to get_hash()
       - getHash() must specify a bdId to make the request against.
         Look at where bdNode.cc::send_query() is called, and how the
