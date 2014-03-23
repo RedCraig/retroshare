@@ -75,9 +75,9 @@
 bdNode::bdNode(bdNodeId *ownId, std::string dhtVersion, std::string bootfile, bdDhtFunctions *fns)
 	:mNodeSpace(ownId, fns), mQueryMgr(NULL), mConnMgr(NULL),
 	mFilterPeers(NULL), mOwnId(*ownId), mDhtVersion(dhtVersion), mStore(bootfile, fns), mFns(fns),
-	mFriendList(ownId), mHistory(HISTORY_PERIOD)
+	mFriendList(ownId), mHistory(HISTORY_PERIOD), mGetHashResultReady(false),
+	mGetHashBdId(), mGetHashKey()
 {
-
 	init(); /* (uses this pointers) stuff it - do it here! */
 }
 
@@ -1999,7 +1999,7 @@ void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token,
 	// doValueCallback(id, key, status)
 	mGetHashResultReady = true;
 	mGetHashBdId = *id;
-	std::string mGetHashKey = key;
+	mGetHashKey = key;
 
 	// bitdht/auth/Storage::getHashCallback()
 	// getHashCallback(values);
