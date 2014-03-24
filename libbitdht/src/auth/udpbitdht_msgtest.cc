@@ -28,7 +28,7 @@
 #include "udp/udpstack.h"
 #include "bitdht/bdstddht.h"
 #include "bitdht/bdmanager.h"
-
+#include "bitdht/bdiface.h"
 #include "bdHandler.h"
 
 #include <string.h>
@@ -104,7 +104,8 @@ int args(char *name)
     std::cerr << " -q <num_queries>";
     std::cerr << " -r  (do dht restarts) ";
     std::cerr << " -j  (do join test) ";
-    std::cerr << " -f <findPeerName, e.g., b8033e8acab57e170b612372727b38a60f28b76e>";
+    std::cerr << " -f do find_host before get_hash? <true|false>";
+    std::cerr << " -t <target bdNodeId to perform find_host for, e.g., b8033e8acab57e170b612372727b38a60f28b76e>";
     std::cerr << std::endl;
     return 1;
 }
@@ -120,9 +121,10 @@ int main(int argc, char **argv)
     bool doRestart = false;
     bool doThreadJoin = false;
     int noQueries = 0;
+    bool doFindNode = false;
     std::string findPeerName;
 
-    while((c = getopt(argc, argv,"rjp:b:u:q:f:")) != -1)
+    while((c = getopt(argc, argv,"rjfp:b:u:q:t:")) != -1)
     {
         switch (c)
         {
@@ -175,6 +177,12 @@ int main(int argc, char **argv)
             }
             break;
             case 'f':
+            {
+                doFindNode = true;
+                std::cerr << "doFindNode: " << doFindNode << std::endl;
+            }
+            break;
+            case 't':
             {
                 findPeerName = optarg;
                 std::cerr << "findPeerName: " << findPeerName;
@@ -282,6 +290,7 @@ int main(int argc, char **argv)
     }
 
     bool foundNode = false;
+    bool sentGetHash = false;
     while(1)
     {
         sleep(10);
@@ -296,7 +305,7 @@ int main(int argc, char **argv)
             bitdht->printDht();
 
             bdId resultId;
-            if(foundNode == false)
+            if(doFindNode && foundNode == false)
             {
                 findNode(bitdhtHandler, bitdht, findPeerName, resultId);
 
@@ -314,11 +323,35 @@ int main(int argc, char **argv)
                 foundNode = true;
             }
 
-            bdId targetNode = resultId;
-            bdNodeId key;
-            memcpy(key.data, "test hash", 9);
-            getHash(bitdhtHandler, bitdht, targetNode, key);
-			// bitdht->getHash(resultId, key);
+            // get_hash
+            if(!sentGetHash)
+            {
+                bdId targetNode; //(targetID, target_addr);
+                if(!doFindNode)
+                {
+                    // bdId targetNode = resultId;
+                    bdNodeId targetID;
+                    memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
+                    struct sockaddr_in target_addr;
+                    memset(&target_addr, 0, sizeof(target_addr));
+                    target_addr.sin_family = AF_INET;
+                    char *ip = {"127.0.0.1"};
+                    target_addr.sin_addr.s_addr = inet_addr(ip);
+                    target_addr.sin_port = htons(3074);
+                    bdId hardTargetNode(targetID, target_addr);
+                    targetNode = hardTargetNode;
+                }
+                else
+                {
+                    targetNode = resultId;
+                }
+
+                bdNodeId key;
+                memcpy(key.data, "test key", 8);
+                getHash(bitdhtHandler, bitdht, targetNode, key);
+    			// bitdht->getHash(resultId, key);
+                sentGetHash = true;
+            }
 
         }
 
