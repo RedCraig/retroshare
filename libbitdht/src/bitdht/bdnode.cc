@@ -1980,30 +1980,21 @@ void bdNode::msgin_reply_hash(bdId *id, bdToken *transId, bdToken *token,
 		bdPrintCompactPeerId(std::cerr, *it);
 	}
 	std::cerr << std::endl;
-#else
-	// (void) id;
-	// (void) transId;
-	// (void) token;
-	// (void) values;
-
-	// lets short circuit the query manager and call the callback now
-	// it'll slow UDP stack, but so what.
-
-	// time_t now = time(NULL);
-	// pit->second.mCallbackTS = now;
-	// bdId id(it->first,pit->second.mDhtAddr);
-	// doPeerCallback(&id, callbackStatus);
-
-	// bdNodeManager
-	std::string key = values.front();
+#endif
 	// doValueCallback(id, key, status)
+	// TODO: The normal approach for libbitdht is to put the results into the
+	//		 queryManager via:
+	//		 mQueryMgr->checkPotentialPeer(id, src);
+	//		 and for the query manager to manage the bdQuery status, then
+	//		 during it's thread calling the iteration() fn, it calls the
+	//		 correct callback in bdNodeManager.
+	//		 This code is short circuiting the query manager and instead
+	//		 making the callback now.
+	//		 This will slow the udpstack a tad, as it's waiting on this
+	//		 function to finish.
 	mGetHashResultReady = true;
 	mGetHashBdId = *id;
-	mGetHashKey = key;
-
-	// bitdht/auth/Storage::getHashCallback()
-	// getHashCallback(values);
-#endif
+	mGetHashKey = values.front();
 }
 
 void bdNode::msgin_reply_nearest(bdId *id, bdToken *transId, bdToken *token, std::list<bdId> &nodes)

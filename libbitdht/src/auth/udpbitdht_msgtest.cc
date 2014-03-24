@@ -86,13 +86,39 @@ bool findNode(BitDhtHandler &bitdhtHandler,
     return true;
 }
 
-int getHash(BitDhtHandler &bitdhtHandler,
-            UdpBitDht *bitdht,
-            bdId &targetNode,
-            bdNodeId key)
+std::string getHash(BitDhtHandler &bitdhtHandler,
+                    UdpBitDht *bitdht,
+                    bdId &targetNode,
+                    bdNodeId key)
 {
     bitdht->getHash(targetNode, key);
-    return 1;
+
+    // check for results
+    while(false == bitdhtHandler.m_gotHashResult)
+    {
+        sleep(10);
+    }
+
+    return bitdhtHandler.m_getHashValue;
+}
+
+
+bool postHash(BitDhtHandler &bitdhtHandler,
+              UdpBitDht *bitdht,
+              bdId &targetNode,
+              bdNodeId key,
+              std::string hash,
+              std::string secret)
+{
+    bitdht->postHash(targetNode, key);
+
+    // check for results
+    while(false == bitdhtHandler.m_postHashGotResult)
+    {
+        sleep(10);
+    }
+
+    return bitdhtHandler.m_postHashSuccess;
 }
 
 int args(char *name)
@@ -323,13 +349,44 @@ int main(int argc, char **argv)
                 foundNode = true;
             }
 
+            // // post_hash
+            // if(!sentGetHash)
+            // {
+            //     bdId targetNode;
+            //     if(!doFindNode)
+            //     {
+            //         bdNodeId targetID;
+            //         memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
+            //         struct sockaddr_in target_addr;
+            //         memset(&target_addr, 0, sizeof(target_addr));
+            //         target_addr.sin_family = AF_INET;
+            //         char *ip = {"127.0.0.1"};
+            //         target_addr.sin_addr.s_addr = inet_addr(ip);
+            //         target_addr.sin_port = htons(3074);
+            //         bdId hardTargetNode(targetID, target_addr);
+            //         targetNode = hardTargetNode;
+            //     }
+            //     else
+            //     {
+            //         // If we've done the find_node request, then use it's
+            //         // result as the targetNode.
+            //         targetNode = resultId;
+            //     }
+
+            //     bdNodeId key;
+            //     memcpy(key.data, "test key", 8);
+            //     // When this finishes, the hash will be present in:
+            //     // bitdhtHandler.m_getHashValue.
+            //     getHash(bitdhtHandler, bitdht, targetNode, key);
+            //     sentGetHash = true;
+            // }
+
             // get_hash
             if(!sentGetHash)
             {
-                bdId targetNode; //(targetID, target_addr);
+                bdId targetNode;
                 if(!doFindNode)
                 {
-                    // bdId targetNode = resultId;
                     bdNodeId targetID;
                     memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
                     struct sockaddr_in target_addr;
@@ -343,13 +400,17 @@ int main(int argc, char **argv)
                 }
                 else
                 {
+                    // If we've done the find_node request, then use it's
+                    // result as the targetNode.
                     targetNode = resultId;
                 }
 
                 bdNodeId key;
                 memcpy(key.data, "test key", 8);
-                getHash(bitdhtHandler, bitdht, targetNode, key);
-    			// bitdht->getHash(resultId, key);
+                // When this finishes, the hash will be present in:
+                // bitdhtHandler.m_getHashValue.
+                std::string hash = getHash(bitdhtHandler, bitdht,
+                                           targetNode, key);
                 sentGetHash = true;
             }
 

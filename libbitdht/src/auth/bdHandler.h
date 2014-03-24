@@ -76,7 +76,24 @@ public:
         return 1;
     }
 
+    // get_hash
+    // TODO: proper implementation should have this as a map, with the key
+    //       being the bdNodeId that the request was made to.
+    //       In this case we know the test code is only making a single
+    //       get_hash request.
+    // Have we received a result?
+    bool m_gotHashResult;
+    // The returned hash value.
+    std::string m_getHashValue;
+
+    // post_hash
+    // Have we received a result?
+    bool m_postHashGotResult;
+    // Was the hash posted successfully?
+    bool m_postHashSuccess;
+
 private:
+    // find_node
     bdMutex resultsMtx; /* for all class data (below) */
     std::map<bdNodeId, BssResult> mSearchNodes;
 };

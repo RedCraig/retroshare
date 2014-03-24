@@ -51,8 +51,9 @@
 // };
 
 BitDhtHandler::BitDhtHandler()
+: m_getHashValue(),
+  m_gotHashResult(false)
 {
-    ;
 }
 BitDhtHandler::~BitDhtHandler()
 {
@@ -182,29 +183,16 @@ int BitDhtHandler::dhtPeerCallback(const bdId *id, uint32_t status)
     return 1;
 }
 
-int BitDhtHandler::dhtValueCallback(const bdId *id, std::string key, uint32_t status)
+int BitDhtHandler::dhtValueCallback(const bdId *id, std::string hash, uint32_t status)
 {
     std::cerr << "BitDhtHandler::PeerCallback() NodeId: ";
     bdStdPrintId(std::cerr, id);
     std::cerr << std::endl;
 
     bdStackMutex stack(resultsMtx); /********** MUTEX LOCKED *************/
-    std::cerr << "HOLY SHITBALLS got a key back: " << key << std::endl;
+    std::cerr << "HOLY SHITBALLS got a hash back: " << hash << std::endl;
+    m_getHashValue = hash;
+    m_gotHashResult = true;
 
-    // /* find the node from our list */
-    // std::map<bdNodeId, BssResult>::iterator it;
-    // it = mSearchNodes.find(id->id);
-    // if (it == mSearchNodes.end())
-    // {
-    //     std::cerr << "BitDhtHandler::PeerCallback() Unknown NodeId !!! ";
-    //     std::cerr << std::endl;
-
-    //     return 1;
-    // }
-    // it->second.status = status;
-
-    // switch(status)
-    // {
-    // }
     return 1;
 }
