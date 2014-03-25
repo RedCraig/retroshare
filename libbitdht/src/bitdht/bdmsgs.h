@@ -87,8 +87,25 @@ int bitdht_peers_reply_hash_msg(bdToken *tid, bdNodeId *id,
                                 char *msg, int avail);
 
 // post_hash
-int bitdht_post_hash_msg(bdToken *tid, bdNodeId *id, bdNodeId *info_hash,
-                         uint32_t port, bdToken *token, char *msg, int avail);
+int bitdht_post_hash_msg(bdToken *transId,
+                         bdId *id, bdNodeId *key,
+                         std::string hash, std::string secret,
+                         char *const msg, int avail);
+
+// bitdht_announce_peers_msg expects a
+// bdToken *token
+// This is because the last request made to the node
+// which we will announce with returned a token. The next request to that node
+// (bitdht_announce_peers_msg) must provide the same token or the request
+// will be ignored. This is bittorrents way of ensuring that the
+// value written to the key:value (value being ip:port tuples) is the
+// remembered ip:port from the last requests source/sender, and it doesn't
+// blindly write the provided value.
+// For post_hash, we have just completed a find_node request which doesn't
+//
+// In our case, we're going to have to trust the peer. We don't care about
+// writing an ip:port, so we don't care about remembering the souce of the last
+// request.
 
 int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id,
                                char *msg, int avail);

@@ -1021,15 +1021,20 @@ void bdNode::msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 	mFns->bdPrintNodeId(std::cerr, info_hash);
 	std::cerr << std::endl;
 #endif
-        char msg[10240];
-        int avail = 10240;
+    char msg[10240];
+    int avail = 10240;
 
-	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_GET_HASH, info_hash);
+    registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_GET_HASH, info_hash);
 
-        int blen = bitdht_get_peers_msg(transId, &(mOwnId), info_hash, msg, avail-1);
-        sendPkt(msg, blen, id->addr);
+    // int blen = bitdht_get_peers_msg(transId, &(mOwnId), info_hash,
+                                    // msg, avail-1);
+    int blen = bitdht_post_hash_msg(transId, &mOwnId, key,
+                                    hash, secret,
+                                    msg, avail-1);
 
-	mAccount.incCounter(BDACCOUNT_MSG_QUERYHASH, true);
+    sendPkt(msg, blen, id->addr);
+
+    mAccount.incCounter(BDACCOUNT_MSG_QUERYHASH, true);
 }
 
 void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token,
