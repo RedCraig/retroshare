@@ -215,19 +215,20 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	                      std::string hash, std::string secret);
 	void msgin_post_hash(bdId *id,  bdToken *transId,
 						 bdNodeId *info_hash,  uint32_t port, bdToken *token);
-	void msgout_reply_post(bdId *id, bdToken *transId);
-	void msgin_reply_post(bdId *id, bdToken *transId);
-
+	void msgout_reply_post_hash(bdId *id, bdToken *transId);
+	void msgin_reply_post_hash(bdId *id, bdToken *transId);
 
 	// other functions
 	void msgout_reply_nearest(bdId *id, bdToken *transId,
-				bdToken *token, std::list<bdId> &peers);
+	                          bdToken *token, std::list<bdId> &peers);
 	void msgin_reply_nearest(bdId *id, bdToken *transId,
-				bdToken *token, std::list<bdId> &nodes);
+	                         bdToken *token, std::list<bdId> &nodes);
 	void msgout_connect_genmsg(bdId *id, bdToken *transId, int msgtype,
-				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
+	                           bdId *srcAddr, bdId *destAddr, int mode,
+	                           int param, int status);
 	void msgin_connect_genmsg(bdId *id, bdToken *transId, int msgtype,
-                                        bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
+	                          bdId *srcAddr, bdId *destAddr, int mode,
+	                          int param, int status);
 
 
 	/* token handling */

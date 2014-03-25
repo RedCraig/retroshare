@@ -907,7 +907,6 @@ void bdNode::msgout_ping(bdId *id, bdToken *transId)
         sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_PING, true);
-
 }
 
 
@@ -942,40 +941,9 @@ void bdNode::msgout_pong(bdId *id, bdToken *transId)
         sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_PONG, true);
-
-}
-
-void bdNode::msgout_reply_find_node(bdId *id, bdToken *transId, std::list<bdId> &peers)
-{
-        char msg[10240];
-        int avail = 10240;
-
-	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_REPLY_NODE, NULL);
-
-	mAccount.incCounter(BDACCOUNT_MSG_REPLYFINDNODE, true);
-
-        int blen = bitdht_resp_node_msg(transId, &(mOwnId), peers, msg, avail-1);
-
-        sendPkt(msg, blen, id->addr);
-
-#ifdef DEBUG_NODE_MSGOUT
-	std::cerr << "bdNode::msgout_reply_find_node() TransId: ";
-	bdPrintTransId(std::cerr, transId);
-	std::cerr << " To: ";
-	mFns->bdPrintId(std::cerr, id);
-	std::cerr << " Peers:";
-	std::list<bdId>::iterator it;
-	for(it = peers.begin(); it != peers.end(); it++)
-	{
-		std::cerr << " ";
-		mFns->bdPrintId(std::cerr, &(*it));
-	}
-	std::cerr << std::endl;
-#endif
 }
 
 
-}
 
 void bdNode::msgout_find_node(bdId *id, bdToken *transId, bdNodeId *query)
 {
@@ -1001,7 +969,6 @@ void bdNode::msgout_find_node(bdId *id, bdToken *transId, bdNodeId *query)
         sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_QUERYNODE, true);
-
 }
 
 void bdNode::msgout_reply_find_node(bdId *id, bdToken *transId, std::list<bdId> &peers)
@@ -1102,7 +1069,6 @@ void bdNode::msgout_reply_hash(bdId *id, bdToken *transId, bdToken *token,
         sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYQUERYHASH, true);
-
 }
 
 void bdNode::msgout_reply_nearest(bdId *id, bdToken *transId, bdToken *token, std::list<bdId> &nodes)
@@ -1136,8 +1102,6 @@ void bdNode::msgout_reply_nearest(bdId *id, bdToken *transId, bdToken *token, st
 
         sendPkt(msg, blen, id->addr);
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYQUERYHASH, true);
-
-
 }
 
 void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
@@ -1153,22 +1117,19 @@ void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
 	bdPrintToken(std::cerr, token);
 	std::cerr << std::endl;
 #endif
-
 	char msg[10240];
 	int avail = 10240;
 
 	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_POST_HASH, key);
 
-
-	int blen = bitdht_announce_peers_msg(
-	                                     transId,&(mOwnId),info_hash, port,
+	int blen = bitdht_announce_peers_msg(transId,& (mOwnId), info_hash, port,
 	                                     token, msg, avail-1);
-
 	sendPkt(msg, blen, id->addr);
+
 	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, true);
 }
 
-void bdNode::msgout_reply_post(bdId *id, bdToken *transId)
+void bdNode::msgout_reply_post_hash(bdId *id, bdToken *transId)
 {
 #ifdef DEBUG_NODE_MSGOUT
 	std::cerr << "bdNode::msgout_reply_post() TransId: ";
@@ -1188,7 +1149,6 @@ void bdNode::msgout_reply_post(bdId *id, bdToken *transId)
 
 	sendPkt(msg, blen, id->addr);
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYPOSTHASH, true);
-
 }
 
 
@@ -1722,7 +1682,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 			mFns->bdPrintId(std::cerr, &srcId);
 			std::cerr << std::endl;
 #endif
-			msgin_reply_post(&srcId, &transId);
+			msgin_reply_post_hash(&srcId, &transId);
 			break;
 		}
 		case BITDHT_MSG_TYPE_CONNECT:  /* a: id, src, dest, mode, status, type */
@@ -2104,13 +2064,13 @@ void bdNode::msgin_post_hash(bdId *id,
 }
 
 
-void bdNode::msgin_reply_post(bdId *id, bdToken *transId)
+void bdNode::msgin_reply_post_hash(bdId *id, bdToken *transId)
 {
 	/* generate message, send to udp */
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYPOSTHASH, false);
 
 #ifdef DEBUG_NODE_MSGIN
-	std::cerr << "bdNode::msgin_reply_post() TransId: ";
+	std::cerr << "bdNode::msgin_reply_post_hash() TransId: ";
 	bdPrintTransId(std::cerr, transId);
 	std::cerr << " From: ";
 	mFns->bdPrintId(std::cerr, id);
