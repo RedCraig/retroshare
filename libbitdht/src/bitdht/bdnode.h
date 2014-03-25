@@ -104,6 +104,9 @@ class bdNodePublisher
 	virtual void send_ping(bdId *id) = 0; /* message out */
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId) = 0; /* message out */
 	virtual void send_get_hash_query(bdId &targetNode, bdNodeId &key) = 0;
+	virtual void postHash(bdId &targetNode, bdNodeId &key,
+	                      std::string hash, std::string secret) = 0;
+
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status) = 0;
 
@@ -150,6 +153,8 @@ class bdNode: public bdNodePublisher
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId); /* message out */
 	// virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash);
 	virtual void send_get_hash_query(bdId &targetNode, bdNodeId &key);
+	virtual void postHash(bdId &targetNode, bdNodeId &key,
+	                      std::string hash, std::string secret);
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 
@@ -189,7 +194,8 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	void msgin_pong(bdId *id, bdToken *transId, bdToken *versionId);
 	void msgout_pong(bdId *id, bdToken *transId);
 
-	// get_hash (bittorrent get_peers) - get a value for a key from the DHT
+	// get_hash
+	// (bittorrent get_peers) - get a value for a key from the DHT
 	// TODO: implemented but not hooked up
 	void msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash);
 	// implemented and hooked up
@@ -203,18 +209,13 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	void msgin_reply_hash(bdId *id, bdToken *transId,
 						  bdToken *token, std::list<std::string> &values);
 
-	// post_hash (bittorrent announce_peers) - write a key:value to the DHT
-	// TODO: implemented but not hooked up, will need to give it a key:value to write
-	void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
-	                      uint32_t port, bdToken *token);
-	// TODO: hooked up to recv() but does nothing.
-	//		 It should queue a query which then calls msgout_reply_post
+	// post_hash
+	// (bittorrent announce_peers) - write a key:value to the DHT
+	void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
+	                      std::string hash, std::string secret);
 	void msgin_post_hash(bdId *id,  bdToken *transId,
 						 bdNodeId *info_hash,  uint32_t port, bdToken *token);
-	// TODO: not queued by msgin_post_hash
-	//		 need to add code to processRemoteQuery to handle sending this response
 	void msgout_reply_post(bdId *id, bdToken *transId);
-	// TODO: hooked up to recv()? but does nothing.
 	void msgin_reply_post(bdId *id, bdToken *transId);
 
 
@@ -295,7 +296,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	std::list<bdNodeNetMsg *> mIncomingMsgs;
 
 
-	bdQuery *mGetHashQueryResult;
+	// bdQuery *mGetHashQueryResult;
 
 };
 

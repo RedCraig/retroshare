@@ -67,6 +67,8 @@ virtual void updateKnownPeer(const bdId *id, uint32_t type, uint32_t flags);
 virtual	void addFindNode(bdNodeId *id, uint32_t mode);
 virtual	void removeFindNode(bdNodeId *id);
 virtual	void getHash(bdId &id, bdNodeId &key);
+virtual	void postHash(bdId &id, bdNodeId &key,
+                      std::string hash, std::string secret);
 
 	/***** Add / Remove Callback Clients *****/
 virtual	void addCallback(BitDhtCallback *cb);

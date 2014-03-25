@@ -226,6 +226,16 @@ void bdNodeManager::addFindNode(bdNodeId *id, uint32_t qflags)
 	return;
 }
 
+void bdNodeManager::postHash(bdId &targetNode, bdNodeId &key,
+                             std::string hash, std::string secret)
+{
+#ifdef DEBUG_MGR
+	std::cerr << "bdNodeManager::findDhtValue()";
+	std::cerr << std::endl;
+#endif
+	send_post_hash_query(targetNode, key, hash, secret);
+}
+
 void bdNodeManager::getHash(bdId &targetNode, bdNodeId &key)
 /*
 targetNode the the target node id

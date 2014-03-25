@@ -127,6 +127,13 @@ void UdpBitDht::getHash(bdId &id, bdNodeId &key)
 
 	mBitDhtManager->getHash(id, key);
 }
+void UdpBitDht::postHash(bdId &id, bdNodeId &key,
+                         std::string hash, std::string secret)
+{
+	bdStackMutex stack(dhtMtx); /********** MUTEX LOCKED *************/
+
+	mBitDhtManager->postHash(id, key, hash, secret);
+}
 
         /***** Add / Remove Callback Clients *****/
 void UdpBitDht::addCallback(BitDhtCallback *cb)

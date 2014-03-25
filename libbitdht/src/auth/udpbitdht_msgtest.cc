@@ -110,7 +110,7 @@ bool postHash(BitDhtHandler &bitdhtHandler,
               std::string hash,
               std::string secret)
 {
-    bitdht->postHash(targetNode, key);
+    bitdht->postHash(targetNode, key, hash, secret);
 
     // check for results
     while(false == bitdhtHandler.m_postHashGotResult)
