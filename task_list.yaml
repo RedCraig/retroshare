@@ -252,4 +252,5 @@ paper notes:
   - what are the odds of your data becoming unavailable in a small DHT network? keep a copy locally just in case?
     DHT nodes network do not have to be friends, the data should be available assuming the DHT replicates the hash
     table data amongst nodes. i.e. when nodes go offline their data is already replicated to other nodes in their bucket.
-
+- how you never find the exact peer in a DHT, just closest matches - so what if your closest matches go offline
+- how the poster of the has is responsible for posting the hash, and keeping it alive on other nodes (i.e. poster is responsible for replication amongst other nodes)
