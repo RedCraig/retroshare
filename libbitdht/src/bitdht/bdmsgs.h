@@ -78,17 +78,27 @@ int bitdht_response_ping_msg(bdToken *tid, bdNodeId *id, bdToken *vid, char *msg
 int bitdht_find_node_msg(bdToken *tid, bdNodeId *id, bdNodeId *target, char *msg, int avail);
 int bitdht_resp_node_msg(bdToken *tid, bdNodeId *id, std::list<bdId> &nodes,
                                         char *msg, int avail);
+// get_hash
 int bitdht_get_peers_msg(bdToken *tid, bdNodeId *id, bdNodeId *info_hash,
                                         char *msg, int avail);
 int bitdht_peers_reply_hash_msg(bdToken *tid, bdNodeId *id,
                                 bdToken *token,
                                 std::list<std::string> &values,
                                 char *msg, int avail);
+
+// post_hash
+int bitdht_post_hash_msg(bdToken *tid, bdNodeId *id, bdNodeId *info_hash,
+                         uint32_t port, bdToken *token, char *msg, int avail);
+
+int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id,
+                               char *msg, int avail);
+
+
 int bitdht_peers_reply_closest_msg(bdToken *tid, bdNodeId *id,
                                 bdToken *token, std::list<bdId> &nodes,
                                         char *msg, int avail);
 int bitdht_announce_peers_msg(bdToken *tid, bdNodeId *id, bdNodeId *info_hash,
-			uint32_t port, bdToken *token, char *msg, int avail);
+                              uint32_t port, bdToken *token, char *msg, int avail);
 int bitdht_reply_announce_msg(bdToken *tid, bdNodeId *id,
                                         char *msg, int avail);
 
