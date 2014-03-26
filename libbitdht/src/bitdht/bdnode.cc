@@ -1337,8 +1337,10 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 		}
 	}
 	else if ((beType == BITDHT_MSG_TYPE_GET_HASH) ||
-			(beType == BITDHT_MSG_TYPE_POST_HASH))
+		 (beType == BITDHT_MSG_TYPE_POST_HASH))
 	{
+                // TODO: post_hash needs to be handled in it's own if clause
+                //       it doesn't have a target, only a key
 		be_target = beMsgGetDictNode(be_data, "info_hash");
 		if (!be_target)
 		{
@@ -1406,6 +1408,8 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 	be_node  *be_token = NULL;
 	if ((beType == BITDHT_MSG_TYPE_REPLY_HASH) ||
 		(beType == BITDHT_MSG_TYPE_REPLY_NEAR) ||
+                // TODO: post_hash does not provide a token, but it does
+                //       provide a secret
 		(beType == BITDHT_MSG_TYPE_POST_HASH))
 	{
 		be_token = beMsgGetDictNode(be_data, "token");
@@ -1426,6 +1430,8 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 	}
 
 	/****************** handle port (post hash) ***************************/
+        // TODO: post_hash doesn't provide a port, only bittorrents
+        // announce_peers provides the port.
         uint32_t port;
 	be_node  *be_port = NULL;
 	if (beType == BITDHT_MSG_TYPE_POST_HASH)

@@ -660,7 +660,15 @@ uint32_t beMsgType(be_node *n)
 	reply_neigh { "id":"0123456789abcdefghij", "nodes": "def456..."}}
 	reply_hash { "id":"abcdefghij0123456789", "token":"aoeusnth", "values": ["axje.u", "idhtnm"]}}
 	reply_near { "id":"abcdefghij0123456789", "token":"aoeusnth", "nodes": "def456..."}
+
 	*/
+    /*
+    bitdht_reply_post_hash_msg
+    be_add_keypair(iddict, "id", idnode);
+    be_add_keypair(iddict, "key", hashnode);
+    be_add_keypair(iddict, "value", value);
+    be_add_keypair(iddict, "secret", secret);
+    */
 
 	be_node *reply = beMsgGetDictNode(n, "r");
 	if (!reply)
