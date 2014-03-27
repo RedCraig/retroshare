@@ -317,6 +317,7 @@ int main(int argc, char **argv)
 
     bool foundNode = false;
     bool sentGetHash = false;
+    bool sentPostHash = false;
     while(1)
     {
         sleep(10);
@@ -349,37 +350,48 @@ int main(int argc, char **argv)
                 foundNode = true;
             }
 
-            // // post_hash
-            // if(!sentGetHash)
-            // {
-            //     bdId targetNode;
-            //     if(!doFindNode)
-            //     {
-            //         bdNodeId targetID;
-            //         memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
-            //         struct sockaddr_in target_addr;
-            //         memset(&target_addr, 0, sizeof(target_addr));
-            //         target_addr.sin_family = AF_INET;
-            //         char *ip = {"127.0.0.1"};
-            //         target_addr.sin_addr.s_addr = inet_addr(ip);
-            //         target_addr.sin_port = htons(3074);
-            //         bdId hardTargetNode(targetID, target_addr);
-            //         targetNode = hardTargetNode;
-            //     }
-            //     else
-            //     {
-            //         // If we've done the find_node request, then use it's
-            //         // result as the targetNode.
-            //         targetNode = resultId;
-            //     }
+            // post_hash
+            if(!sentPostHash)
+            {
+                bdId targetNode;
+                if(!doFindNode)
+                {
+                    bdNodeId targetID;
+                    memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
+                    struct sockaddr_in target_addr;
+                    memset(&target_addr, 0, sizeof(target_addr));
+                    target_addr.sin_family = AF_INET;
+                    char *ip = {"127.0.0.1"};
+                    target_addr.sin_addr.s_addr = inet_addr(ip);
+                    target_addr.sin_port = htons(3074);
+                    bdId hardTargetNode(targetID, target_addr);
+                    targetNode = hardTargetNode;
+                }
+                else
+                {
+                    // If we've done the find_node request, then use it's
+                    // result as the targetNode.
+                    targetNode = resultId;
+                }
 
-            //     bdNodeId key;
-            //     memcpy(key.data, "test key", 8);
-            //     // When this finishes, the hash will be present in:
-            //     // bitdhtHandler.m_getHashValue.
-            //     getHash(bitdhtHandler, bitdht, targetNode, key);
-            //     sentGetHash = true;
-            // }
+                bdNodeId key;
+                memcpy(key.data, "test key", 8);
+                std::string value = "I AM A HASH VALUE";
+                std::string secret = "i am a secret";
+                // When this finishes, the hash will be present in:
+                // bitdhtHandler.m_getHashValue.
+
+                // bool postHash(BitDhtHandler &bitdhtHandler,
+                //               UdpBitDht *bitdht,
+                //               bdId &targetNode,
+                //               bdNodeId key,
+                //               std::string value,
+                //               std::string secret)
+                // bitdhtHandler.m_postHashSuccess;
+
+                postHash(bitdhtHandler, bitdht, targetNode, key, value, secret);
+                sentPostHash = true;
+            }
 
             // get_hash
             if(!sentGetHash)
