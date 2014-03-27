@@ -110,7 +110,6 @@ int bitdht_post_hash_msg(bdToken *transId,
 int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id,
                                char *msg, int avail);
 
-
 int bitdht_peers_reply_closest_msg(bdToken *tid, bdNodeId *id,
                                 bdToken *token, std::list<bdId> &nodes,
                                         char *msg, int avail);

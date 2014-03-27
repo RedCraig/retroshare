@@ -407,11 +407,13 @@ int bitdht_reply_post_hash_msg(bdToken *trandId, bdNodeId *id,
 
         be_node *idnode = be_create_str_wlen((char *) id->data,
                                              BITDHT_KEY_LEN);
+        be_node *postHashReply = be_create_str_wlen("post_hash_reply", 15);
         be_node *trandIdnode = be_create_str_wlen((char *) trandId->data,
                                                   trandId->len);
         be_node *yqrnode = be_create_str("r");
 
         be_add_keypair(iddict, "id", idnode);
+        be_add_keypair(iddict, "phr", postHashReply);
         be_add_keypair(dict, "r", iddict);
         be_add_keypair(dict, "t", trandIdnode);
         be_add_keypair(dict, "y", yqrnode);
@@ -682,17 +684,11 @@ uint32_t beMsgType(be_node *n)
 	/* otherwise a reply or - invalid
 	pong {"id":"mnopqrstuvwxyz123456"}
 	reply_neigh { "id":"0123456789abcdefghij", "nodes": "def456..."}}
-	reply_hash { "id":"abcdefghij0123456789", "token":"aoeusnth", "values": ["axje.u", "idhtnm"]}}
-	reply_near { "id":"abcdefghij0123456789", "token":"aoeusnth", "nodes": "def456..."}
-
+	reply_hash { "id":"abcdefghij0123456789", "token":"aoeusnth",
+                 "values": ["axje.u", "idhtnm"]}}
+	reply_near { "id":"abcdefghij0123456789", "token":"aoeusnth",
+                 "nodes": "def456..."}
 	*/
-    /*
-    bitdht_reply_post_hash_msg
-    be_add_keypair(iddict, "id", idnode);
-    be_add_keypair(iddict, "key", hashnode);
-    be_add_keypair(iddict, "value", value);
-    be_add_keypair(iddict, "secret", secret);
-    */
 
 	be_node *reply = beMsgGetDictNode(n, "r");
 	if (!reply)
@@ -704,6 +700,7 @@ uint32_t beMsgType(be_node *n)
 	be_node *token = beMsgGetDictNode(reply, "token");
 	be_node *values = beMsgGetDictNode(reply, "values");
 	be_node *nodes = beMsgGetDictNode(reply, "nodes");
+    be_node *postHashReply = beMsgGetDictNode(reply, "phr");
 
 	if (!id)
 	{
@@ -712,9 +709,13 @@ uint32_t beMsgType(be_node *n)
 
 	if (token && values)
 	{
-		/* reply hash */
+		/* reply get hash */
 		return BITDHT_MSG_TYPE_REPLY_HASH;
 	}
+    else if (postHashReply)
+    {
+        return BITDHT_MSG_TYPE_UNKNOWN;
+    }
 	else if (token && nodes)
 	{
 		/* reply near */
@@ -730,8 +731,6 @@ uint32_t beMsgType(be_node *n)
 		/* pong */
 		return BITDHT_MSG_TYPE_PONG;
 	}
-	/* TODO reply_post */
-	//return BITDHT_MSG_TYPE_REPLY_POST;
 	/* can't get here! */
 	return BITDHT_MSG_TYPE_UNKNOWN;
 }
