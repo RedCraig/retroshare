@@ -461,14 +461,14 @@ void bdNode::send_query(bdId *id, bdNodeId *targetNodeId)
 #endif
 }
 
-void bdNode::postHash(bdId &targetNode, bdNodeId &key,
-                      std::string hash, std::string secret)
+void bdNode::send_post_hash_query(bdId &targetNode, bdNodeId &key,
+                                  std::string hash, std::string secret)
 {
 	/* push out query */
 	bdToken transId;
 	genNewTransId(&transId);
 
-	msgout_post_hash(&targetNode, &transId, &key, &hash, &secret);
+	msgout_post_hash(&targetNode, &transId, &key, hash, secret);
 
 #ifdef DEBUG_NODE_MSGS
 	std::cerr << "bdNode::postHash : ";
@@ -1026,10 +1026,7 @@ void bdNode::msgout_get_hash(bdId *id, bdToken *transId, bdNodeId *info_hash)
 
     registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_GET_HASH, info_hash);
 
-    // int blen = bitdht_get_peers_msg(transId, &(mOwnId), info_hash,
-                                    // msg, avail-1);
-    int blen = bitdht_post_hash_msg(transId, &mOwnId, key,
-                                    hash, secret,
+    int blen = bitdht_get_peers_msg(transId, &(mOwnId), info_hash,
                                     msg, avail-1);
 
     sendPkt(msg, blen, id->addr);
@@ -1127,8 +1124,10 @@ void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
 
 	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_POST_HASH, key);
 
-	int blen = bitdht_announce_peers_msg(transId,& (mOwnId), info_hash, port,
-	                                     token, msg, avail-1);
+        int blen = bitdht_post_hash_msg(transId, &mOwnId, key,
+                                        hash, secret, msg, avail-1);
+	// int blen = bitdht_announce_peers_msg(transId,& (mOwnId), info_hash, port,
+	//                                      token, msg, avail-1);
 	sendPkt(msg, blen, id->addr);
 
 	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, true);

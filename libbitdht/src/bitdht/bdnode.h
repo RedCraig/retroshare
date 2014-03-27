@@ -153,8 +153,8 @@ class bdNode: public bdNodePublisher
 	virtual void send_query(bdId *id, bdNodeId *targetNodeId); /* message out */
 	// virtual void send_get_hash_query(bdId *id, bdNodeId *const info_hash);
 	virtual void send_get_hash_query(bdId &targetNode, bdNodeId &key);
-	virtual void postHash(bdId &targetNode, bdNodeId &key,
-	                      std::string hash, std::string secret);
+	virtual void send_post_hash_query(bdId &targetNode, bdNodeId &key,
+	                                  std::string hash, std::string secret);
 	virtual void send_connect_msg(bdId *id, int msgtype,
 				bdId *srcAddr, bdId *destAddr, int mode, int param, int status);
 
