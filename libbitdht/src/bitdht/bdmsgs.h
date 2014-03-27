@@ -88,7 +88,7 @@ int bitdht_peers_reply_hash_msg(bdToken *tid, bdNodeId *id,
 
 // post_hash
 int bitdht_post_hash_msg(bdToken *transId,
-                         bdId *id, bdNodeId *key,
+                         bdNodeId *id, bdNodeId *key,
                          std::string hash, std::string secret,
                          char *const msg, int avail);
 

@@ -353,7 +353,7 @@ int bitdht_peers_reply_closest_msg(bdToken *tid, bdNodeId *id,
 
 // post_hash
 int bitdht_post_hash_msg(bdToken *transId,
-                         bdOwnId *id, bdNodeId *key,
+                         bdNodeId *id, bdNodeId *key,
                          std::string hash, std::string secret,
                          char *const msg, int avail)
 {
@@ -363,19 +363,18 @@ int bitdht_post_hash_msg(bdToken *transId,
     be_node *iddict = be_create_dict();
 
     be_node *idnode = be_create_str_wlen((char *) id->data, BITDHT_KEY_LEN);
+    be_node *tidnode = be_create_str_wlen((char *) transId->data, BITDHT_KEY_LEN);
     be_node *hashnode = be_create_str_wlen((char *) key->data, BITDHT_KEY_LEN);
     be_node *value = be_create_str_wlen((char *) hash.data(), hash.size());
-    be_node *secret = be_create_str_wlen((char *) secret.data(),
+    be_node *besecret = be_create_str_wlen((char *) secret.data(),
                                          secret.size());
 
     be_add_keypair(iddict, "id", idnode);
     be_add_keypair(iddict, "key", hashnode);
     be_add_keypair(iddict, "value", value);
-    be_add_keypair(iddict, "secret", secret);
+    be_add_keypair(iddict, "secret", besecret);
 
     be_node *postHash = be_create_str("post_hash");
-    be_node *transIdnode = be_create_str_wlen((char *) transId->data,
-                                              transId->len);
     be_node *qynode = be_create_str("q");
 
     be_add_keypair(dict, "a", iddict);
@@ -393,14 +392,39 @@ int bitdht_post_hash_msg(bdToken *transId,
     be_free(dict);
 
     return blen;
-
 }
 
 
-int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id,
+int bitdht_reply_post_hash_msg(bdToken *trandId, bdNodeId *id,
                                char *msg, int avail)
 {
+#ifdef DEBUG_MSGS
+    fprintf(stderr, "bitdht_reply_post_hash_msg()\n");
+#endif
+        be_node *dict = be_create_dict();
 
+        be_node *iddict = be_create_dict();
+
+        be_node *idnode = be_create_str_wlen((char *) id->data,
+                                             BITDHT_KEY_LEN);
+        be_node *trandIdnode = be_create_str_wlen((char *) trandId->data,
+                                                  trandId->len);
+        be_node *yqrnode = be_create_str("r");
+
+        be_add_keypair(iddict, "id", idnode);
+        be_add_keypair(dict, "r", iddict);
+        be_add_keypair(dict, "t", trandIdnode);
+        be_add_keypair(dict, "y", yqrnode);
+
+#ifdef DEBUG_MSG_DUMP
+        /* dump answer */
+    be_dump(dict);
+#endif
+
+    int blen = be_encode(dict, msg, avail);
+    be_free(dict);
+
+    return blen;
 }
 
 /**** FINAL TWO MESSAGES! ***/
