@@ -54,8 +54,8 @@ DHT:
   - even if find_node is enough, how do you go from find_node to getting a key:value from the find_node call? I dont think you can.
     RS doesn't do this, a node has an IP addr and that's all RS needs to connect. So RS doesn't actually write or read from the DHT itself.
 
-- get_hash
-  - 4 messages required:
+- [Done] get_hash
+  - [Done] 4 messages required:
     - [Done] msgout_get_hash
       implemented but not hooked up
       // get_hash (bittorrent get_peers) - get a value for a key from the DHT
@@ -101,7 +101,29 @@ DHT:
         How will this work with our case, when we're returning a single 'file' blob.
         - am just returning the file blob as a single string
 
-  - Need the bdQueryManager to handle peer get hash queries.
+  - [Done] add test code to get_hash()
+    - [Done] getHash() must specify a bdId to make the request against.
+      Look at where bdNode.cc::send_query() is called, and how the
+      bdId and bdNodeId is formed for that call.
+    - [Done] adding in the 'external' (udbbitdht) access to bdNode::send_get_hash_query
+    - [Done] I might have to use the dhtValueCallback callback, which gives a string as a fn param (i.e. the returning hash data)
+      - [Done] how do I make sure that my fn uses the dhtValueCallback?
+    - [Done] when you make a query:
+      - [Done] is the bdId the id of the peer that the query is made against?
+      - [Done] Do we specify a peer to make the query against?
+        Not for find node, I am not sure about get_hash(). Might have to make
+        a find_node request to get the node with our hash, then make a
+        get_hash request to that node.
+      - [Done] does the query take care of finding the correct peer to make the query against?
+        How does findNode work? It must go through multiple phases of near nodes to find the actual nodes?
+        This is taken care of by bdQuery, and the query state. See
+        int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
+        bool bdQuery::result(std::list<bdId> &answer)
+        and also in bdNode::processRemoteQuery()
+          mNodeSpace.find_nearest_nodes(&(query.mQuery), BITDHT_QUERY_NEIGHBOUR_PEERS, nearest);
+      - do we need to add support for findHash to bdQuery or bdQueryMananger?
+
+  - [Not Doing] Need the bdQueryManager to handle peer get hash queries.
     - bdQueryManager only understands find_node queries
     - bdQueryManager handles multiple step find_node queries
       (i.e. finding closest to target you know about, it tells you a closer
@@ -113,59 +135,37 @@ DHT:
       to the peer which should have that hash.
       - this also means that
 
-  - implement a hash table in libbitdht
-    (╯°□°）╯︵ ┻━┻)
-    it's calling itself a dht with no actual hash table in place
-    libbitdht doesn't actually keep track of ANY hash table. Nothing. WTFF.
-    - need to figure out the logic for bdNodeId -> key
-      so that lookup can determine which node to go to for a specific key
-      - "Two node ID's or a node ID and a key are XORed and the result is the distance between them. ""
-        distance metric between nodeid and key
-        http://en.wikipedia.org/wiki/Kademlia#Accelerated_lookups
-    - then the hash table lookup can just use one node, we don't need to
-      handle the full (find node which has my hash) logic
-    - add support to query manager for get hash query type
-      - will probably need it's own set of steps if i have to add support
-        for finding the actual node using multiple retries
-        (same as existing find node logic, perhaps reuse that first)
+- implement a hash table in libbitdht
+  (╯°□°）╯︵ ┻━┻)
+  it's calling itself a dht with no actual hash table in place
+  - need to figure out the logic for bdNodeId -> key
+    so that lookup can determine which node to go to for a specific key
+    - "Two node ID's or a node ID and a key are XORed and the result is the distance between them. ""
+      distance metric between nodeid and key
+      http://en.wikipedia.org/wiki/Kademlia#Accelerated_lookups
+  - then the hash table lookup can just use one node, we don't need to
+    handle the full (find node which has my hash) logic
+  - add support to query manager for get hash query type
+    - will probably need it's own set of steps if i have to add support
+      for finding the actual node using multiple retries
+      (same as existing find node logic, perhaps reuse that first)
 
+  - [Done] finish bdHandler::BitDhtHandler::GetHash
+  - [Done] finish getHash in auth/udp msgtest
+  - [Done] passing get_hash a targetNodeId, is this used when creatig the msgoug_get_hash?
+  - [Done] get two debug versions of retroshare talking
+  - [Done] debug through get_hash() message on both peers
 
-  - finish bdHandler::BitDhtHandler::GetHash
-  - finish getHash in auth/udp msgtest
-  - passing get_hash a targetNodeId, is this used when creatig the msgoug_get_hash?
+- post_hash
+  - write message types in bdmsgs
+  - add code to bdmsgs which can deserialize both messages
+  - check dhtPeerCallback
+    - where is it called from on msg reply? do I need to fix it for post_hash?
+  - add support to dhtPeerCallback for two types of query
 
+-------------------------------------------------------------------------------
 
-
-    - add test code to get_hash()
-      - getHash() must specify a bdId to make the request against.
-        Look at where bdNode.cc::send_query() is called, and how the
-        bdId and bdNodeId is formed for that call.
-      - adding in the 'external' (udbbitdht) access to bdNode::send_get_hash_query
-      - I might have to use the dhtValueCallback callback, which gives a string as a fn param (i.e. the returning hash data)
-        - how do I make sure that my fn uses the dhtValueCallback?
-      - when you make a query:
-        - is the bdId the id of the peer that the query is made against?
-        - Do we specify a peer to make the query against?
-          Not for find node, I am not sure about get_hash(). Might have to make
-          a find_node request to get the node with our hash, then make a
-          get_hash request to that node.
-        - [Done] does the query take care of finding the correct peer to make the query against?
-          How does findNode work? It must go through multiple phases of near nodes to find the actual nodes?
-          This is taken care of by bdQuery, and the query state. See
-          int bdQuery::nextQuery(bdId &id, bdNodeId &targetNodeId)
-          bool bdQuery::result(std::list<bdId> &answer)
-          and also in bdNode::processRemoteQuery()
-            mNodeSpace.find_nearest_nodes(&(query.mQuery), BITDHT_QUERY_NEIGHBOUR_PEERS, nearest);
-        - do we need to add support for findHash to bdQuery or bdQueryMananger?
-
-    - Results handling:
-      bdNodeManager::getDhtPeerAddress uses results from a findPeer request
-      - implement
-        bdNodeManager::getDhtValue(const bdNodeId *id, std::string key, std::string & /*value*/)
-
-
-    - [Done] get two debug versions of retroshare talking
-    - debug through get_hash() message on both peers
+Hook up passwords auth to gethash code test.
 
     - PasswordsAuth update to handle async messages & callbacks
       Need to break each place in PasswordsAuth() which does a getHash into two fns:
@@ -174,6 +174,10 @@ DHT:
       - get uname->fLI
       - get fLI->FLI
       - get kKS->KKS
+
+
+-------------------------------------------------------------------------------
+
 
   - hook up to RS code
     - add code to rsinit.cc which sends a gethash() query
