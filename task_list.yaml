@@ -124,6 +124,7 @@ DHT:
       - do we need to add support for findHash to bdQuery or bdQueryMananger?
 
   - [Not Doing] Need the bdQueryManager to handle peer get hash queries.
+    shortcircuited this
     - bdQueryManager only understands find_node queries
     - bdQueryManager handles multiple step find_node queries
       (i.e. finding closest to target you know about, it tells you a closer
@@ -152,20 +153,36 @@ DHT:
 
   - [Done] finish bdHandler::BitDhtHandler::GetHash
   - [Done] finish getHash in auth/udp msgtest
-  - [Done] passing get_hash a targetNodeId, is this used when creatig the msgoug_get_hash?
+  - [Done] passing get_hash a targetNodeId, is this used when creatig the msgout_get_hash?
   - [Done] get two debug versions of retroshare talking
   - [Done] debug through get_hash() message on both peers
 
 - post_hash
-  - write message types in bdmsgs
+  - [Done] write message types in bdmsgs
+    // post hash should determine the filename (i.e. key) if possible
+    // post_hash (bittorrent announce_peers) - write a key:value to the DHT
+    // TODO: implemented but not hooked up, will need to give it a key:value to write
+    void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
+    // TODO: hooked up to recv() but does nothing.
+    //       It should queue a query which then calls msgout_reply_post
+    void msgin_post_hash(bdId *id,  bdToken *transId,
+                         bdNodeId *info_hash,  uint32_t port, bdToken *token);
+    // TODO: not queued by msgin_post_hash
+    //       need to add code to processRemoteQuery to handle sending this response
+    void msgout_reply_post(bdId *id, bdToken *transId);
+    // TODO: hooked up to recv()? but does nothing.
+    void msgin_reply_post(bdId *id, bdToken *transId);
   - add code to bdmsgs which can deserialize both messages
+    - post hash msgin
+    - [Done] post hash reply
   - check dhtPeerCallback
     - where is it called from on msg reply? do I need to fix it for post_hash?
   - add support to dhtPeerCallback for two types of query
+    - or just add another callback
 
 -------------------------------------------------------------------------------
 
-Hook up passwords auth to gethash code test.
+Hook up passwords auth to post/gethash code test.
 
     - PasswordsAuth update to handle async messages & callbacks
       Need to break each place in PasswordsAuth() which does a getHash into two fns:
@@ -190,20 +207,6 @@ Hook up passwords auth to gethash code test.
 - BOLLOCKS: HOW THE DO I MAKE SURE THAT ONE OF MY DEBUG DHT NODES IS THE
   ONE THAT HANDLES THE GET_HASH() OR POST_HASH() QUERY?
 
-- post hash
-    // post hash should determine the filename (i.e. key) if possible
-    // post_hash (bittorrent announce_peers) - write a key:value to the DHT
-    // TODO: implemented but not hooked up, will need to give it a key:value to write
-    void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
-    // TODO: hooked up to recv() but does nothing.
-    //       It should queue a query which then calls msgout_reply_post
-    void msgin_post_hash(bdId *id,  bdToken *transId,
-                         bdNodeId *info_hash,  uint32_t port, bdToken *token);
-    // TODO: not queued by msgin_post_hash
-    //       need to add code to processRemoteQuery to handle sending this response
-    void msgout_reply_post(bdId *id, bdToken *transId);
-    // TODO: hooked up to recv()? but does nothing.
-    void msgin_reply_post(bdId *id, bdToken *transId);
 
 - Then unittest or get RS into a test case to verify we get or send data.
   If this doesn't work out of the box, debugging could take a _lot_ of time.
