@@ -280,6 +280,8 @@ int bitdht_peers_reply_hash_msg(bdToken *tid, bdNodeId *id,
 
         be_node *tidnode = be_create_str_wlen((char *) tid->data, tid->len);
         be_node *tokennode = be_create_str_wlen((char *) token->data, token->len);
+    // FIXME: this might be truncating the strings to the size of peerIDs
+    // that would be back as i'm passing the 'value' data back in reply_hash
 	be_node *valuesnode = makeCompactPeerIds(values);
 
         be_node *yqrnode = be_create_str("r");
@@ -736,6 +738,25 @@ uint32_t beMsgType(be_node *n)
 }
 
 /* extract specific types here */
+
+int beMsgGetHash(be_node *n, char &hash, uint &hashlen)
+{
+    if (n->type != BE_STR)
+    {
+        return 0;
+    }
+    int len = be_str_len(n);
+
+    if(len > hashlen)
+        return 0;
+
+    for(int i = 0; i < len; i++)
+    {
+        hash[i] = n->val.s[i];
+    }
+    hashlen = len;
+    return 1;
+}
 
 int beMsgGetToken(be_node *n, bdToken &token)
 {

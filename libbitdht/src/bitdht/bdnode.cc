@@ -1335,8 +1335,10 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 			return;
 		}
 	}
-	else if ((beType == BITDHT_MSG_TYPE_GET_HASH) ||
-		 (beType == BITDHT_MSG_TYPE_POST_HASH))
+	else if (beType == BITDHT_MSG_TYPE_GET_HASH)
+                // I changed post hash to have a "key" rather than info_hash.
+                // info_hash is the bitorrent name for key in the DHT. :)
+                // || (beType == BITDHT_MSG_TYPE_POST_HASH))
 	{
                 // TODO: post_hash needs to be handled in it's own if clause
                 //       it doesn't have a target, only a key
@@ -1406,10 +1408,10 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
         bdToken token;
 	be_node  *be_token = NULL;
 	if ((beType == BITDHT_MSG_TYPE_REPLY_HASH) ||
-		(beType == BITDHT_MSG_TYPE_REPLY_NEAR) ||
-                // TODO: post_hash does not provide a token, but it does
-                //       provide a secret
-		(beType == BITDHT_MSG_TYPE_POST_HASH))
+		(beType == BITDHT_MSG_TYPE_REPLY_NEAR)) // ||
+                // post_hash does not provide a token, but it does
+                // provide a secret.
+		// (beType == BITDHT_MSG_TYPE_POST_HASH))
 	{
 		be_token = beMsgGetDictNode(be_data, "token");
 		if (!be_token)
@@ -1431,26 +1433,39 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 	/****************** handle port (post hash) ***************************/
         // TODO: post_hash doesn't provide a port, only bittorrents
         // announce_peers provides the port.
-        uint32_t port;
-	be_node  *be_port = NULL;
-	if (beType == BITDHT_MSG_TYPE_POST_HASH)
-	{
-		be_port = beMsgGetDictNode(be_data, "port");
-		if (!be_port)
-		{
+        std::list<std::string> values;
+        be_node  *be_values = NULL;
+        if (beType == BITDHT_MSG_TYPE_POST_HASH)
+        {
+                be_values = beMsgGetDictNode(be_data, "values");
+                if (!be_values)
+                {
 #ifdef DEBUG_NODE_PARSE
-			std::cerr << "bdNode::recvPkt() POST_HASH Missing Port. Dropping Msg";
-			std::cerr << std::endl;
+                        std::cerr << "bdNode::recvPkt() Missing Values. Dropping Msg";
+                        std::cerr << std::endl;
 #endif
-			be_free(node);
-			return;
-		}
-	}
+                        be_free(node);
+                        return;
+                }
+        }
 
-	if (be_port)
-	{
-		beMsgGetUInt32(be_port, &port);
-	}
+        if (be_values)
+        {
+                beMsgGetListStrings(be_values, values);
+        }
+
+        // key, value, secret,
+        // use beMsgGetHash
+        // which needs tested
+        char* key[1024];
+	beMsgGetHash(key)
+        values.pop_front();
+        std::string value = values.front();
+        values.pop_front();
+        std::string secret = values.front();
+        values.pop_front();
+
+
 
 	/****************** handle Connect (lots) ***************************/
 	bdId connSrcAddr;
@@ -1673,6 +1688,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 			break;
 		}
 		case BITDHT_MSG_TYPE_POST_HASH:   /* a: id, transId, info_hash, port, token */
+                // id, transid, key, hash, secret
 		{
 #ifdef DEBUG_NODE_MSGS
 			std::cerr << "bdNode::recvPkt() Post Hash from : ";
@@ -1682,6 +1698,8 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 			std::cerr << " with port: " << port;
 			std::cerr << std::endl;
 #endif
+                        // msgin_post_hash(&srcId, &transId, &target_info_hash,
+                        //                 port, &token);
 			msgin_post_hash(&srcId, &transId, &target_info_hash, port, &token);
 			break;
 		}
