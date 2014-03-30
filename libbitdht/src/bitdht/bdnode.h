@@ -211,10 +211,19 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 
 	// post_hash
 	// (bittorrent announce_peers) - write a key:value to the DHT
-	void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
-	                      std::string hash, std::string secret);
-	void msgin_post_hash(bdId *id,  bdToken *transId,
-						 bdNodeId *info_hash,  uint32_t port, bdToken *token);
+	void msgout_post_hash(bdId *id,
+	                      bdToken *transId,
+	                      bdNodeId *key,
+	                      std::string hash,
+	                      std::string secret);
+	// void msgin_post_hash(bdId *id,  bdToken *transId,
+						 // bdNodeId *info_hash, bdToken *token);
+	void msgin_post_hash(bdId *id,
+	                     bdToken *transId,
+	                     char *key,
+	                     char *hash,
+	                     char *secret);
+
 	void msgout_reply_post_hash(bdId *id, bdToken *transId);
 	void msgin_reply_post_hash(bdId *id, bdToken *transId);
 
@@ -278,7 +287,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	bool mGetHashResultReady;
 	bdId mGetHashBdId;
 	std::string mGetHashKey;
-
+	bool mPostHashQueryFinished;
 
 	private:
 

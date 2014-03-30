@@ -76,7 +76,7 @@ bdNode::bdNode(bdNodeId *ownId, std::string dhtVersion, std::string bootfile, bd
 	:mNodeSpace(ownId, fns), mQueryMgr(NULL), mConnMgr(NULL),
 	mFilterPeers(NULL), mOwnId(*ownId), mDhtVersion(dhtVersion), mStore(bootfile, fns), mFns(fns),
 	mFriendList(ownId), mHistory(HISTORY_PERIOD), mGetHashResultReady(false),
-	mGetHashBdId(), mGetHashKey()
+	mGetHashBdId(), mGetHashKey(), mPostHashQueryFinished(false)
 {
 	init(); /* (uses this pointers) stuff it - do it here! */
 }
@@ -1106,56 +1106,6 @@ void bdNode::msgout_reply_nearest(bdId *id, bdToken *transId, bdToken *token, st
 	mAccount.incCounter(BDACCOUNT_MSG_REPLYQUERYHASH, true);
 }
 
-void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
-                              std::string hash, std::string secret)
-{
-#ifdef DEBUG_NODE_MSGOUT
-	std::cerr << "bdNode::msgout_post_hash() TransId: ";
-	bdPrintTransId(std::cerr, transId);
-	std::cerr << " To: ";
-	mFns->bdPrintId(std::cerr, id);
-	std::cerr << " key: ";
-	mFns->bdPrintNodeId(std::cerr, info_hash);
-	bdPrintToken(std::cerr, token);
-	std::cerr << std::endl;
-#endif
-	char msg[10240];
-	int avail = 10240;
-
-	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_POST_HASH, key);
-
-        int blen = bitdht_post_hash_msg(transId, &mOwnId, key,
-                                        hash, secret, msg, avail-1);
-	// int blen = bitdht_announce_peers_msg(transId,& (mOwnId), info_hash, port,
-	//                                      token, msg, avail-1);
-	sendPkt(msg, blen, id->addr);
-
-	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, true);
-}
-
-void bdNode::msgout_reply_post_hash(bdId *id, bdToken *transId)
-{
-#ifdef DEBUG_NODE_MSGOUT
-	std::cerr << "bdNode::msgout_reply_post() TransId: ";
-	bdPrintTransId(std::cerr, transId);
-	std::cerr << " To: ";
-	mFns->bdPrintId(std::cerr, id);
-	std::cerr << std::endl;
-#endif
-
-	/* generate message, send to udp */
-	char msg[10240];
-	int avail = 10240;
-
-	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_REPLY_POST, NULL);
-
-	int blen = bitdht_reply_announce_msg(transId, &(mOwnId), msg, avail-1);
-
-	sendPkt(msg, blen, id->addr);
-	mAccount.incCounter(BDACCOUNT_MSG_REPLYPOSTHASH, true);
-}
-
-
 void    bdNode::sendPkt(char *msg, int len, struct sockaddr_in addr)
 {
 	//fprintf(stderr, "bdNode::sendPkt(%d) to %s:%d\n",
@@ -1337,7 +1287,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 	}
 	else if (beType == BITDHT_MSG_TYPE_GET_HASH)
                 // I changed post hash to have a "key" rather than info_hash.
-                // info_hash is the bitorrent name for key in the DHT. :)
+                // info_hash is the bitorrent name for key in the DHT.
                 // || (beType == BITDHT_MSG_TYPE_POST_HASH))
 	{
                 // TODO: post_hash needs to be handled in it's own if clause
@@ -1404,7 +1354,7 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 		beMsgGetListStrings(be_values, values);
 	}
 
-	/************ handle token (reply_hash, reply_near, post hash) ********/
+	/************ handle token (reply_hash, reply_near) ********/
         bdToken token;
 	be_node  *be_token = NULL;
 	if ((beType == BITDHT_MSG_TYPE_REPLY_HASH) ||
@@ -1430,41 +1380,93 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 		beMsgGetToken(be_transId, transId);
 	}
 
-	/****************** handle port (post hash) ***************************/
-        // TODO: post_hash doesn't provide a port, only bittorrents
-        // announce_peers provides the port.
-        std::list<std::string> values;
-        be_node  *be_values = NULL;
-        if (beType == BITDHT_MSG_TYPE_POST_HASH)
+	/****************** handle post_hash ***************************/
+        // POST_HASH
+        // deserializes bitdht_post_hash_msg
+        uint KEY_LEN = 5120;
+	char key[KEY_LEN];
+	memset(key, KEY_LEN, '\0');
+	char hash[KEY_LEN];
+	memset(hash, KEY_LEN, '\0');
+	char secret[KEY_LEN];
+	memset(secret, KEY_LEN, '\0');
+	// std::list<std::string> values;
+	// be_node *be_values = NULL;
+	if (beType == BITDHT_MSG_TYPE_POST_HASH)
         {
-                be_values = beMsgGetDictNode(be_data, "values");
-                if (!be_values)
+        	// be_values = beMsgGetDictNode(be_data, "key");
+        	// be_values = beMsgGetDictNode(be_data, "value");
+        	// be_values = beMsgGetDictNode(be_data, "secret");
+		be_node *be_key = beMsgGetDictNode(be_data, "key");
+		if (be_key)
+		{
+			beMsgGetData(be_key, key, KEY_LEN);
+		}
+                else
                 {
-#ifdef DEBUG_NODE_PARSE
-                        std::cerr << "bdNode::recvPkt() Missing Values. Dropping Msg";
-                        std::cerr << std::endl;
-#endif
+                        std::cerr << "bdNode::recvPkt() post_hash missing key.";
+                        std::cerr << " Dropping Msg" << std::endl;
                         be_free(node);
                         return;
                 }
-        }
 
-        if (be_values)
-        {
-                beMsgGetListStrings(be_values, values);
-        }
 
-        // key, value, secret,
-        // use beMsgGetHash
-        // which needs tested
-        char* key[1024];
-	beMsgGetHash(key)
-        values.pop_front();
-        std::string value = values.front();
-        values.pop_front();
-        std::string secret = values.front();
-        values.pop_front();
+                /*
+                be_values = beMsgGetDictNode(be_data, "values");
+                if (be_values)
+                {
+	                beMsgGetListStrings(be_values, values);
+                }
+                else
+                {
+                        std::cerr << "bdNode::recvPkt() Missing Values. Dropping Msg";
+                        std::cerr << std::endl;
+                        be_free(node);
+                        return;
+                }
 
+	        // key, value, secret,
+	        // use beMsgGetHash
+	        // which needs tested
+	        std::string key = values.front();
+	        std::cerr << "key: " << key << std::endl;
+	        values.pop_front();
+
+	        std::string value = values.front();
+	        std::cerr << "value: " << value << std::endl;
+	        values.pop_front();
+
+	        std::string secret = values.front();
+	        std::cerr << ": " << value << std::endl;
+	        std::cerr << "secret: " << secret << std::endl;
+	        values.pop_front();
+	        */
+	}
+
+	// REPLY_POST_HASH
+        // deserializes bitdht_reply_post_hash_msg
+	{
+	        std::list<std::string> values;
+	        be_node  *be_values = NULL;
+	        if (beType == BITDHT_MSG_TYPE_POST_HASH)
+	        {
+	                be_values = beMsgGetDictNode(be_data, "values");
+	                if (!be_values)
+	                {
+	#ifdef DEBUG_NODE_PARSE
+	                        std::cerr << "bdNode::recvPkt() Missing Values. Dropping Msg";
+	                        std::cerr << std::endl;
+	#endif
+	                        be_free(node);
+	                        return;
+	                }
+	        }
+
+	        if (be_values)
+	        {
+	                beMsgGetListStrings(be_values, values);
+	        }
+	}
 
 
 	/****************** handle Connect (lots) ***************************/
@@ -1700,10 +1702,12 @@ void    bdNode::recvPkt(char *msg, int len, struct sockaddr_in addr)
 #endif
                         // msgin_post_hash(&srcId, &transId, &target_info_hash,
                         //                 port, &token);
-			msgin_post_hash(&srcId, &transId, &target_info_hash, port, &token);
+			msgin_post_hash(&srcId, &transId,
+			                key, hash, secret);
+
 			break;
 		}
-		case BITDHT_MSG_TYPE_REPLY_POST:  /* r: id, transId */
+		case BITDHT_MSG_TYPE_REPLY_POST_HASH:  /* r: id, transId */
 		{
 #ifdef DEBUG_NODE_MSGS
 			std::cerr << "bdNode::recvPkt() Reply Post from: ";
@@ -2061,11 +2065,40 @@ void bdNode::msgin_reply_nearest(bdId *id, bdToken *transId, bdToken *token, std
 
 
 
+void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
+                              std::string hash, std::string secret)
+{
+#ifdef DEBUG_NODE_MSGOUT
+	std::cerr << "bdNode::msgout_post_hash() TransId: ";
+	bdPrintTransId(std::cerr, transId);
+	std::cerr << " To: ";
+	mFns->bdPrintId(std::cerr, id);
+	std::cerr << " key: ";
+	mFns->bdPrintNodeId(std::cerr, info_hash);
+	bdPrintToken(std::cerr, token);
+	std::cerr << std::endl;
+#endif
+	char msg[10240];
+	int avail = 10240;
+
+	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_POST_HASH, key);
+
+        int blen = bitdht_post_hash_msg(transId, &mOwnId, key,
+                                        hash, secret, msg, avail-1);
+	// int blen = bitdht_announce_peers_msg(transId,& (mOwnId), info_hash, port,
+	//                                      token, msg, avail-1);
+	sendPkt(msg, blen, id->addr);
+
+	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, true);
+}
+
+// this function def is mismatched with what is calling it.
+// i removed the port, and the token. probably dont need either of them.
 void bdNode::msgin_post_hash(bdId *id,
                              bdToken *transId,
-                             bdNodeId *info_hash,
-                             uint32_t port,
-                             bdToken *token)
+                             char *key,
+                             char *hash,
+                             char *secret)
 {
 
 	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, false);
@@ -2075,22 +2108,37 @@ void bdNode::msgin_post_hash(bdId *id,
 	bdPrintTransId(std::cerr, transId);
 	std::cerr << " From: ";
 	mFns->bdPrintId(std::cerr, id);
-	std::cerr << " Info_Hash: ";
-	mFns->bdPrintNodeId(std::cerr, info_hash);
-	std::cerr << " Port: " << port;
-	std::cerr << " Token: ";
-	bdPrintToken(std::cerr, token);
+	std::cerr << " key: ";
+	mFns->bdPrintNodeId(std::cerr, key);
 	std::cerr << std::endl;
-#else
-	(void) id;
-	(void) transId;
-	(void) info_hash;
-	(void) port;
-	(void) token;
 #endif
-
+	// TODO: implement hash usage here
+	// TODO: then call the return message
+	msgout_reply_post_hash(id, transId);
 }
 
+void bdNode::msgout_reply_post_hash(bdId *id, bdToken *transId)
+{
+#ifdef DEBUG_NODE_MSGOUT
+	std::cerr << "bdNode::msgout_reply_post() TransId: ";
+	bdPrintTransId(std::cerr, transId);
+	std::cerr << " To: ";
+	mFns->bdPrintId(std::cerr, id);
+	std::cerr << std::endl;
+#endif
+
+	/* generate message, send to udp */
+	char msg[10240];
+	int avail = 10240;
+
+	registerOutgoingMsg(id, transId, BITDHT_MSG_TYPE_REPLY_POST_HASH, NULL);
+
+	int blen = bitdht_reply_post_hash_msg(transId, &(mOwnId),
+	                                      msg, avail-1);
+
+	sendPkt(msg, blen, id->addr);
+	mAccount.incCounter(BDACCOUNT_MSG_REPLYPOSTHASH, true);
+}
 
 void bdNode::msgin_reply_post_hash(bdId *id, bdToken *transId)
 {
@@ -2103,10 +2151,9 @@ void bdNode::msgin_reply_post_hash(bdId *id, bdToken *transId)
 	std::cerr << " From: ";
 	mFns->bdPrintId(std::cerr, id);
 	std::cerr << std::endl;
-#else
-	(void) id;
-	(void) transId;
 #endif
+	// create some variables in bdNode to store the post hash result
+	mPostHashQueryFinished = true;
 }
 
 
@@ -2362,7 +2409,7 @@ void bdNode::registerOutgoingMsg(bdId *id, bdToken *transId, uint32_t msgType, b
 		case BITDHT_MSG_TYPE_REPLY_HASH:
 		case BITDHT_MSG_TYPE_REPLY_NEAR:
 		case BITDHT_MSG_TYPE_POST_HASH:
-		case BITDHT_MSG_TYPE_REPLY_POST:
+		case BITDHT_MSG_TYPE_REPLY_POST_HASH:
 			break;
 	}
 
@@ -2385,7 +2432,7 @@ void bdNode::registerOutgoingMsg(bdId *id, bdToken *transId, uint32_t msgType, b
 #define BITDHT_MSG_TYPE_REPLY_HASH      6
 #define BITDHT_MSG_TYPE_REPLY_NEAR      7
 #define BITDHT_MSG_TYPE_POST_HASH       8
-#define BITDHT_MSG_TYPE_REPLY_POST      9
+#define BITDHT_MSG_TYPE_REPLY_POST_HASH      9
 ***/
 
 }
