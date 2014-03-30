@@ -27,7 +27,7 @@
 // #include <udp/udpstack.h>
 #include <udp/udpbitdht.h>
 // #include <bitdht/bdstddht.h>
-// #include <string.h>
+#include <cstring>
 
 #include "bdHandler.h"
 
@@ -51,8 +51,8 @@
 // };
 
 BitDhtHandler::BitDhtHandler()
-: m_getHashValue(),
-  m_gotHashResult(false)
+: m_gotHashResult(false),
+  m_getHashValue()
 {
 }
 BitDhtHandler::~BitDhtHandler()
@@ -190,9 +190,23 @@ int BitDhtHandler::dhtValueCallback(const bdId *id, std::string hash, uint32_t s
     std::cerr << std::endl;
 
     bdStackMutex stack(resultsMtx); /********** MUTEX LOCKED *************/
-    std::cerr << "HOLY SHITBALLS got a hash back: " << hash << std::endl;
-    m_getHashValue = hash;
-    m_gotHashResult = true;
+
+    // of course, this will break if the hash returned from a get_hash request
+    // contains the string post_hash_success. A better way to do this would
+    // be to have another QUERY_TYPE param passed to this fn which we could
+    // switch on.
+    if(strcmp(hash.data(), "post_hash_success") == 0)
+    {
+        std::cerr << "post_hash completed." << hash << std::endl;
+        m_postHashGotResult = true;
+        m_postHashSuccess = true;
+    }
+    else
+    {
+        std::cerr << "get_hash completed." << hash << std::endl;
+        m_getHashValue = hash;
+        m_gotHashResult = true;
+    }
 
     return 1;
 }

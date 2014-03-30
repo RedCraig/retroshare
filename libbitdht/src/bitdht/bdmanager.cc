@@ -733,7 +733,6 @@ int bdNodeManager::checkStatus()
 	std::cerr << std::endl;
 #endif
 
-
 	// get hash result hack to avoid using querymanager for now
 	if(mGetHashResultReady == true)
 	{
@@ -741,6 +740,11 @@ int bdNodeManager::checkStatus()
 		doValueCallback(&mGetHashBdId, mGetHashKey, 0);
 	}
 
+	if(mPostHashQueryFinished == true)
+	{
+		// void 	doValueCallback(const bdId *id, std::string key, uint32_t status);
+		doValueCallback(&mGetHashBdId, "post_hash_success", 0);
+	}
 
 	/* check queries */
 	std::map<bdNodeId, bdQueryStatus>::iterator it;
