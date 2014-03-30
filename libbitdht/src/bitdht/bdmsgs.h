@@ -44,6 +44,7 @@
 #define BITDHT_MSG_TYPE_REPLY_NEAR      7
 #define BITDHT_MSG_TYPE_POST_HASH       8
 #define BITDHT_MSG_TYPE_REPLY_POST      9
+#define BITDHT_MSG_TYPE_REPLY_POST_HASH 10
 
 
 
@@ -127,6 +128,7 @@ int bitdht_connect_genmsg(bdToken *tid, bdNodeId *id, int msgtype, bdId *src, bd
 //int response_closestnodes_message()
 
 be_node *beMsgGetDictNode(be_node *node, const char *key);
+int beMsgGetData(be_node *n, char *hash, uint &hashlen);
 int beMsgMatchString(be_node *n, const char *str, int len);
 uint32_t beMsgGetY(be_node *n);
 uint32_t beMsgType(be_node *n);

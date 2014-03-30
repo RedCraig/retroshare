@@ -280,9 +280,9 @@ int bitdht_peers_reply_hash_msg(bdToken *tid, bdNodeId *id,
 
         be_node *tidnode = be_create_str_wlen((char *) tid->data, tid->len);
         be_node *tokennode = be_create_str_wlen((char *) token->data, token->len);
-    // FIXME: this might be truncating the strings to the size of peerIDs
-    // that would be back as i'm passing the 'value' data back in reply_hash
-	be_node *valuesnode = makeCompactPeerIds(values);
+        // FIXME: this might be truncating the strings to the size of peerIDs
+        // that would be back as i'm passing the 'value' data back in reply_hash
+        be_node *valuesnode = makeCompactPeerIds(values);
 
         be_node *yqrnode = be_create_str("r");
 
@@ -365,11 +365,12 @@ int bitdht_post_hash_msg(bdToken *transId,
     be_node *iddict = be_create_dict();
 
     be_node *idnode = be_create_str_wlen((char *) id->data, BITDHT_KEY_LEN);
-    be_node *tidnode = be_create_str_wlen((char *) transId->data, BITDHT_KEY_LEN);
+    be_node *tidnode = be_create_str_wlen((char *) transId->data,
+                                          BITDHT_KEY_LEN);
     be_node *hashnode = be_create_str_wlen((char *) key->data, BITDHT_KEY_LEN);
     be_node *value = be_create_str_wlen((char *) hash.data(), hash.size());
     be_node *besecret = be_create_str_wlen((char *) secret.data(),
-                                         secret.size());
+                                           secret.size());
 
     be_add_keypair(iddict, "id", idnode);
     be_add_keypair(iddict, "key", hashnode);
@@ -716,7 +717,7 @@ uint32_t beMsgType(be_node *n)
 	}
     else if (postHashReply)
     {
-        return BITDHT_MSG_TYPE_UNKNOWN;
+        return BITDHT_MSG_TYPE_REPLY_POST_HASH;
     }
 	else if (token && nodes)
 	{
@@ -739,18 +740,18 @@ uint32_t beMsgType(be_node *n)
 
 /* extract specific types here */
 
-int beMsgGetHash(be_node *n, char &hash, uint &hashlen)
+int beMsgGetData(be_node *n, char *hash, uint &hashlen)
 {
     if (n->type != BE_STR)
     {
         return 0;
     }
-    int len = be_str_len(n);
+    uint len = be_str_len(n);
 
     if(len > hashlen)
         return 0;
 
-    for(int i = 0; i < len; i++)
+    for(uint i = 0; i < len; i++)
     {
         hash[i] = n->val.s[i];
     }
