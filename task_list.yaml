@@ -172,13 +172,30 @@ DHT:
     void msgout_reply_post(bdId *id, bdToken *transId);
     // TODO: hooked up to recv()? but does nothing.
     void msgin_reply_post(bdId *id, bdToken *transId);
-  - add code to bdmsgs which can deserialize both messages
-    - post hash msgin
-    - [Done] post hash reply
+
+  - REQUEST
+    - [Done] msgout_post_hash
+      - [Done] bsmsgs::bitdht_post_hash_msg
+    - bdnode::recvPkt() msgin_post_hash
+      - [Done] bsmsgs::beMsgType(),  post_hash, BITDHT_MSG_TYPE_POST_HASH
+      - bdnode::recvPkt()
+****        - need to figure out how to write my data, and read my data,
+          from bencoded format
+      - [Done] bdnode::msgin_post_hash
+  - [Done] RESPONSE
+    - [Done] msgout_reply_post_hash
+      - [Done] bdmsgs::bitdht_reply_post_hash_msg
+    - [Done] bdnode::recvPkt() msgin_reply_post_hash
+      - [Done] bsmsgs::beMsgType() - used "phr" in message
+      - [Done] bdnode::recvPkt() - BITDHT_MSG_TYPE_REPLY_POST_HASH
+      - [Done] bdnode::msgin_reply_post_hash
+
   - check dhtPeerCallback
     - where is it called from on msg reply? do I need to fix it for post_hash?
   - add support to dhtPeerCallback for two types of query
     - or just add another callback
+
+
 
 -------------------------------------------------------------------------------
 
