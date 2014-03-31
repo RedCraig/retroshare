@@ -108,7 +108,7 @@ int bitdht_post_hash_msg(bdToken *transId,
 // writing an ip:port, so we don't care about remembering the souce of the last
 // request.
 
-int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id,
+int bitdht_reply_post_hash_msg(bdToken *tid, bdNodeId *id, bool successful,
                                char *msg, int avail);
 
 int bitdht_peers_reply_closest_msg(bdToken *tid, bdNodeId *id,

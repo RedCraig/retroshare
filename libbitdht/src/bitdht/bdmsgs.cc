@@ -398,7 +398,7 @@ int bitdht_post_hash_msg(bdToken *transId,
 }
 
 
-int bitdht_reply_post_hash_msg(bdToken *trandId, bdNodeId *id,
+int bitdht_reply_post_hash_msg(bdToken *trandId, bdNodeId *id, bool successful,
                                char *msg, int avail)
 {
 #ifdef DEBUG_MSGS
@@ -414,6 +414,10 @@ int bitdht_reply_post_hash_msg(bdToken *trandId, bdNodeId *id,
         be_node *trandIdnode = be_create_str_wlen((char *) trandId->data,
                                                   trandId->len);
         be_node *yqrnode = be_create_str("r");
+
+        be_node *successfulNode = be_create_int(int(successful));
+        be_add_keypair(iddict, "successful", successfulNode);
+
 
         be_add_keypair(iddict, "id", idnode);
         be_add_keypair(iddict, "phr", postHashReply);
@@ -650,7 +654,7 @@ uint32_t beMsgType(be_node *n)
 #endif
 			return BITDHT_MSG_TYPE_GET_HASH;
 		}
-		else if (beMsgMatchString(query, "post_hash", 10))
+		else if (beMsgMatchString(query, "post_hash", 9))
 		{
 #ifdef DEBUG_MSG_TYPE
 			std::cerr << "bsMsgType() QUERY:post_hash MSG TYPE" << std::endl;

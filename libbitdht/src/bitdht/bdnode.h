@@ -224,8 +224,8 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	                     char *hash,
 	                     char *secret);
 
-	void msgout_reply_post_hash(bdId *id, bdToken *transId);
-	void msgin_reply_post_hash(bdId *id, bdToken *transId);
+	void msgout_reply_post_hash(bdId *id, bdToken *transId, bool successful);
+	void msgin_reply_post_hash(bdId *id, bdToken *transId, bool successful);
 
 	// other functions
 	void msgout_reply_nearest(bdId *id, bdToken *transId,
@@ -288,6 +288,7 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	bdId mGetHashBdId;
 	std::string mGetHashKey;
 	bool mPostHashQueryFinished;
+	bool mPostHashQuerySuccessful;
 
 	private:
 

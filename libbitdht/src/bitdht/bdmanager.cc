@@ -738,12 +738,17 @@ int bdNodeManager::checkStatus()
 	{
 		// void 	doValueCallback(const bdId *id, std::string key, uint32_t status);
 		doValueCallback(&mGetHashBdId, mGetHashKey, 0);
+		mGetHashResultReady = false;
 	}
 
 	if(mPostHashQueryFinished == true)
 	{
 		// void 	doValueCallback(const bdId *id, std::string key, uint32_t status);
+		// Should really pass back the mPostHashQuerySuccessful param here,
+		// instead doValueCallback for post_hash_success assumes that
+		// it was successful.
 		doValueCallback(&mGetHashBdId, "post_hash_success", 0);
+		mPostHashQueryFinished = false;
 	}
 
 	/* check queries */
