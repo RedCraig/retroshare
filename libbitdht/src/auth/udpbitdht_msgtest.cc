@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 
 /*******************************************************************
  * DHT test program.
@@ -278,10 +279,10 @@ int main(int argc, char **argv)
         std::list<bdHashEntry>::iterator it;
         for(it = foundEntries.begin(); it != foundEntries.end(); it++)
         {
-            std::cerr << "Found hash:";
-            std::cerr << it->mValue << std::endl;
+            assert(it->mValue == strValue);
+            // std::cerr << "Found hash:";
+            // std::cerr << it->mValue << std::endl;
         }
-
     }
 
     /* setup the udp port */
