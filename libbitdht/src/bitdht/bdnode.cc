@@ -30,6 +30,7 @@
 
 #include "bitdht/bdquerymgr.h"
 #include "bitdht/bdfilter.h"
+#include "bitdht/bdhash.h"
 
 #include "util/bdnet.h"
 #include "util/bdrandom.h"
@@ -42,7 +43,6 @@
 #include <iomanip>
 
 #include "../auth/Storage.h"
-
 
 #define BITDHT_QUERY_START_PEERS    10
 #define BITDHT_QUERY_NEIGHBOUR_PEERS    8
@@ -2089,10 +2089,9 @@ void bdNode::msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *key,
 void bdNode::msgin_post_hash(bdId *id,
                              bdToken *transId,
                              char *key,
-                             char *hash,
+                             char *value,
                              char *secret)
 {
-
 	mAccount.incCounter(BDACCOUNT_MSG_POSTHASH, false);
 
 #ifdef DEBUG_NODE_MSGIN
@@ -2104,8 +2103,33 @@ void bdNode::msgin_post_hash(bdId *id,
 	mFns->bdPrintNodeId(std::cerr, key);
 	std::cerr << std::endl;
 #endif
-	// TODO: implement hash usage here
-	// TODO: then call the return message
+        uint32_t modFlags = BITDHT_HASH_ENTRY_ADD;
+        std::string strKey(key);
+
+
+        // strHashSecret is the secret required by the bdHashEntry, which
+        // then requires the correct secret to modify the hash once the hash
+        // has been set.
+        // We use this secret to make sure that only the secret owner can
+        // _modify_ FLI (the metadata file).
+        // Use a lifetime of 0 and never call mHashSpace.cleanup().
+        std::string strHash(value);
+        std::string strHashSecret(secret);
+        time_t lifetime = 0;
+        time_t store = 0;
+        bdHashEntry entry(value, secret, lifetime, store);
+
+        // TODO: implement a write once policy in the bdHashSpace
+        //       so that FLI and other files cannot be overwritten. The write
+        //       once policy does not require a secret.
+
+        // int     modify(bdNodeId *id, std::string key,
+        //                bdHashEntry *entry,
+        //                uint32_t modFlags);
+        mHashSpace.modify(&id->id, strKey, &entry, modFlags);
+
+        mHashSpace.printHashSpace(std::cerr);
+
 	bool successful = false;
 	msgout_reply_post_hash(id, transId, successful);
 }
