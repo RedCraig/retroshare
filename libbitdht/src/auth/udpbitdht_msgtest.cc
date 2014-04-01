@@ -235,10 +235,8 @@ int main(int argc, char **argv)
     bdDhtFunctions *fns = new bdStdDht();
 
     bdNodeId id;
-
     /* start off with a random id! */
     bdStdRandomNodeId(&id);
-
     if (setUid)
     {
         int len = uid.size();
@@ -252,10 +250,39 @@ int main(int argc, char **argv)
             id.data[i] = uid[i];
         }
     }
-
     std::cerr << "Using NodeId: ";
     fns->bdPrintNodeId(std::cerr, &id);
     std::cerr << std::endl;
+
+    // bdHashSpace test
+    {
+        // write an entry to the hash space
+        uint32_t modFlags = BITDHT_HASH_ENTRY_ADD;
+        std::string strKey("key");
+        std::string strValue("value");
+        std::string strSecret("secret");
+        time_t lifetime = 0;
+        time_t store = 0;
+
+        bdHashSpace testHashSpace;
+        bdHashEntry entry(strValue, strSecret, lifetime, store);
+
+        testHashSpace.modify(&id, strKey, &entry, modFlags);
+
+        testHashSpace.printHashSpace(std::cerr);
+
+        // now find the entry using key lookup
+        std::list<bdHashEntry> foundEntries;
+        testHashSpace.search(&id, strKey, 0x7FFFFFFF, foundEntries);
+
+        std::list<bdHashEntry>::iterator it;
+        for(it = foundEntries.begin(); it != foundEntries.end(); it++)
+        {
+            std::cerr << "Found hash:";
+            std::cerr << it->mValue << std::endl;
+        }
+
+    }
 
     /* setup the udp port */
     struct sockaddr_in local;
