@@ -761,13 +761,29 @@ void bdNode::processRemoteQuery()
 					std::cerr << " TODO";
 					std::cerr << std::endl;
 #endif
-					std::list<std::string> values;
-					// add a single string to the list
-					// TODO: I think the hash len is only 20chars
-					// TODO: find out how retroshare stores DHT hashes
-					//	 and store/get from there.
-					std::string hashString = "PGP hash from node";
-					values.push_front(hashString);
+                                        // info_hash (i.e. the key) is stored
+                                        // in a bdNodeId (mQuery) when
+                                        // queueQuery() is
+                                        // called in msgin_get_hash.
+                                        // This means the key length is limited
+                                        // to 20 bytes, unless replace the
+                                        // use of bdNodeId in queueQuery
+                                        // or use something else to store the
+                                        // key.
+
+                                        std::string strKey(reinterpret_cast<char*>(query.mQuery.data));
+
+                                        std::list<bdHashEntry> foundEntries;
+                                        mHashSpace.search(&query.mId.id, strKey,
+                                                          0x7FFFFFFF,
+                                                          foundEntries);
+
+                                        std::list<std::string> returnValues;
+                                        std::list<bdHashEntry>::iterator it;
+                                        for(it = foundEntries.begin(); it != foundEntries.end(); it++)
+                                        {
+                                                returnValues.push_front(it->mValue);
+                                        }
 
 					// get_hash replies must contain a token.
 					// The token is bittorrent related. The node making the get_hash request
@@ -782,7 +798,7 @@ void bdNode::processRemoteQuery()
 					                  &token,
 					                  // transId is actully the token. Go figure.
 					                  &(query.mTransId),
-					                  values);
+					                  returnValues);
 					break;
 				}
 				default:
