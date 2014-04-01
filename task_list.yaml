@@ -164,7 +164,10 @@ DHT:
     - bdnode::recvPkt() msgin_post_hash
       - [Done] bsmsgs::beMsgType(),  post_hash, BITDHT_MSG_TYPE_POST_HASH
       - bdnode::recvPkt()
-****        - need to figure out how to write my data, and read my data,
+****        - need to figure out how to write my data,
+            - read data:
+              bdnode, line 767, find out how retroshare stores DHT hashes and
+              store/get from there.
           from bencoded format
       - [Done] bdnode::msgin_post_hash
   - [Done] RESPONSE
