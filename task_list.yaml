@@ -136,41 +136,26 @@ DHT:
       to the peer which should have that hash.
       - this also means that
 
-- implement a hash table in libbitdht
-  (╯°□°）╯︵ ┻━┻)
-  it's calling itself a dht with no actual hash table in place
-  - need to figure out the logic for bdNodeId -> key
-    so that lookup can determine which node to go to for a specific key
-    - "Two node ID's or a node ID and a key are XORed and the result is the distance between them. ""
-      distance metric between nodeid and key
-      http://en.wikipedia.org/wiki/Kademlia#Accelerated_lookups
-  - then the hash table lookup can just use one node, we don't need to
-    handle the full (find node which has my hash) logic
-  - add support to query manager for get hash query type
-    - will probably need it's own set of steps if i have to add support
-      for finding the actual node using multiple retries
-      (same as existing find node logic, perhaps reuse that first)
-
   - [Done] finish bdHandler::BitDhtHandler::GetHash
   - [Done] finish getHash in auth/udp msgtest
   - [Done] passing get_hash a targetNodeId, is this used when creatig the msgout_get_hash?
   - [Done] get two debug versions of retroshare talking
   - [Done] debug through get_hash() message on both peers
 
-- post_hash
+- [Done] post_hash
   - [Done] write message types in bdmsgs
     // post hash should determine the filename (i.e. key) if possible
     // post_hash (bittorrent announce_peers) - write a key:value to the DHT
-    // TODO: implemented but not hooked up, will need to give it a key:value to write
+    // [Done]: implemented but not hooked up, will need to give it a key:value to write
     void msgout_post_hash(bdId *id, bdToken *transId, bdNodeId *info_hash,
-    // TODO: hooked up to recv() but does nothing.
+    // [Done]: hooked up to recv() but does nothing.
     //       It should queue a query which then calls msgout_reply_post
     void msgin_post_hash(bdId *id,  bdToken *transId,
                          bdNodeId *info_hash,  uint32_t port, bdToken *token);
-    // TODO: not queued by msgin_post_hash
+    // [Done]: not queued by msgin_post_hash
     //       need to add code to processRemoteQuery to handle sending this response
     void msgout_reply_post(bdId *id, bdToken *transId);
-    // TODO: hooked up to recv()? but does nothing.
+    // [Done]: hooked up to recv()? but does nothing.
     void msgin_reply_post(bdId *id, bdToken *transId);
 
   - REQUEST
@@ -190,11 +175,38 @@ DHT:
       - [Done] bdnode::recvPkt() - BITDHT_MSG_TYPE_REPLY_POST_HASH
       - [Done] bdnode::msgin_reply_post_hash
 
-  - check dhtPeerCallback
-    - where is it called from on msg reply? do I need to fix it for post_hash?
-  - add support to dhtPeerCallback for two types of query
-    - or just add another callback
+  - [Done] check dhtPeerCallback
+    - [Done] where is it called from on msg reply? do I need to fix it for post_hash?
 
+
+- implement a write once policy inthe bdHashSpace
+  so that FLI and other files cannot be overwritten. The write
+  once policy does not require a secret.
+
+
+### libbitdht proper implementations
+- add support to dhtPeerCallback for two types of query
+  - or just add another callback
+- need to figure out the logic for bdNodeId -> key
+  so that lookup can determine which node to go to for a specific key
+  - "Two node ID's or a node ID and a key are XORed and the result is the distance between them. ""
+    distance metric between nodeid and key
+    http://en.wikipedia.org/wiki/Kademlia#Accelerated_lookups
+- then the hash table lookup can just use one node, we don't need to
+  handle the full (find node which has my hash) logic
+- add support to query manager for get hash query type
+  - will probably need it's own set of steps if i have to add support
+    for finding the actual node using multiple retries
+    (same as existing find node logic, perhaps reuse that first)
+
+
+
+Commands:
+// first dht
+./udpbitdht_msgtest -b localboot_find3074.txt -p3074 -ub8033e8acab57e170b612372727b38a60f28b76e -tb8033e8acab57e170b612372727b38a60f28b76e
+
+// second dht which finds first
+-p 3099 -b localboot_find3074.txt -t6238303333653861636162353765313730623631
 
 
 -------------------------------------------------------------------------------
@@ -278,3 +290,7 @@ paper notes:
     table data amongst nodes. i.e. when nodes go offline their data is already replicated to other nodes in their bucket.
 - how you never find the exact peer in a DHT, just closest matches - so what if your closest matches go offline
 - how the poster of the has is responsible for posting the hash, and keeping it alive on other nodes (i.e. poster is responsible for replication amongst other nodes)
+- current messaging protocol based on known string lengths for every message types
+  - doesn't work for username lookup in DHT to get fli, unless we hash the username to a known length
+
+
