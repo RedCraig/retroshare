@@ -122,6 +122,41 @@ bool postHash(BitDhtHandler &bitdhtHandler,
     return bitdhtHandler.m_postHashSuccess;
 }
 
+
+void test_hashSpace()
+{
+    bdNodeId id;
+    /* start off with a random id! */
+    bdStdRandomNodeId(&id);
+
+    // write an entry to the hash space
+    uint32_t modFlags = BITDHT_HASH_ENTRY_ADD;
+    std::string strKey("key");
+    std::string strValue("value");
+    std::string strSecret("secret");
+    time_t lifetime = 0;
+    time_t store = 0;
+
+    bdHashSpace testHashSpace;
+    bdHashEntry entry(strValue, strSecret, lifetime, store);
+
+    testHashSpace.modify(&id, strKey, &entry, modFlags);
+
+    testHashSpace.printHashSpace(std::cerr);
+
+    // now find the entry using key lookup
+    std::list<bdHashEntry> foundEntries;
+    testHashSpace.search(&id, strKey, 0x7FFFFFFF, foundEntries);
+
+    std::list<bdHashEntry>::iterator it;
+    for(it = foundEntries.begin(); it != foundEntries.end(); it++)
+    {
+        assert(it->mValue == strValue);
+        // std::cerr << "Found hash:";
+        // std::cerr << it->mValue << std::endl;
+    }
+}
+
 int args(char *name)
 {
     std::cerr << "Usage: " << name;
@@ -232,6 +267,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    test_hashSpace();
 
     bdDhtFunctions *fns = new bdStdDht();
 
@@ -254,36 +290,6 @@ int main(int argc, char **argv)
     std::cerr << "Using NodeId: ";
     fns->bdPrintNodeId(std::cerr, &id);
     std::cerr << std::endl;
-
-    // bdHashSpace test
-    {
-        // write an entry to the hash space
-        uint32_t modFlags = BITDHT_HASH_ENTRY_ADD;
-        std::string strKey("key");
-        std::string strValue("value");
-        std::string strSecret("secret");
-        time_t lifetime = 0;
-        time_t store = 0;
-
-        bdHashSpace testHashSpace;
-        bdHashEntry entry(strValue, strSecret, lifetime, store);
-
-        testHashSpace.modify(&id, strKey, &entry, modFlags);
-
-        testHashSpace.printHashSpace(std::cerr);
-
-        // now find the entry using key lookup
-        std::list<bdHashEntry> foundEntries;
-        testHashSpace.search(&id, strKey, 0x7FFFFFFF, foundEntries);
-
-        std::list<bdHashEntry>::iterator it;
-        for(it = foundEntries.begin(); it != foundEntries.end(); it++)
-        {
-            assert(it->mValue == strValue);
-            // std::cerr << "Found hash:";
-            // std::cerr << it->mValue << std::endl;
-        }
-    }
 
     /* setup the udp port */
     struct sockaddr_in local;
@@ -403,26 +409,16 @@ int main(int argc, char **argv)
                 }
 
                 bdNodeId key;
-                memcpy(key.data, "test key", 8);
+                memcpy(key.data, "USERNAME_CRAIG", 14);
                 std::string value = "I AM A HASH VALUE";
                 std::string secret = "i am a secret";
-                // When this finishes, the hash will be present in:
-                // bitdhtHandler.m_getHashValue.
-
-                // bool postHash(BitDhtHandler &bitdhtHandler,
-                //               UdpBitDht *bitdht,
-                //               bdId &targetNode,
-                //               bdNodeId key,
-                //               std::string value,
-                //               std::string secret)
-                // bitdhtHandler.m_postHashSuccess;
-
+                // When this finishes, bitdhtHandler.m_postHashSuccess
+                // indicates success.
                 postHash(bitdhtHandler, bitdht, targetNode, key, value, secret);
                 sentPostHash = true;
             }
-
             // get_hash
-            if(!sentGetHash)
+            else if(!sentGetHash)
             {
                 bdId targetNode;
                 if(!doFindNode)
@@ -446,7 +442,7 @@ int main(int argc, char **argv)
                 }
 
                 bdNodeId key;
-                memcpy(key.data, "test key", 8);
+                memcpy(key.data, "USERNAME_CRAIG", 14);
                 // When this finishes, the hash will be present in:
                 // bitdhtHandler.m_getHashValue.
                 std::string hash = getHash(bitdhtHandler, bitdht,
