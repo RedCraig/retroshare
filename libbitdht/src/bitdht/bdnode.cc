@@ -2113,11 +2113,11 @@ void bdNode::msgin_post_hash(bdId *id,
         // We use this secret to make sure that only the secret owner can
         // _modify_ FLI (the metadata file).
         // Use a lifetime of 0 and never call mHashSpace.cleanup().
-        std::string strHash(value);
-        std::string strHashSecret(secret);
+        std::string strValue(value);
+        std::string strSecret(secret);
         time_t lifetime = 0;
         time_t store = 0;
-        bdHashEntry entry(value, secret, lifetime, store);
+        bdHashEntry entry(strValue, strSecret, lifetime, store);
 
         // TODO: implement a write once policy in the bdHashSpace
         //       so that FLI and other files cannot be overwritten. The write
