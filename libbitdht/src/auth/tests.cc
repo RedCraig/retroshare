@@ -16,9 +16,9 @@
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
 #define KEY_LEN 16
-#define PGP_PUB_KEY_LEN 2048
+// #define PGP_PUB_KEY_LEN 2048
 #define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
-#define FKS_ENCRYPTED_DATA_LEN 1024*3
+// #define FKS_ENCRYPTED_DATA_LEN 1024*3
 #define FILE_NAME_LEN 32
 #define METADATA_SIZE 1024*5
 
@@ -53,7 +53,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 \0";
     unsigned int pgpkeyLen = 1066;
 
-    Storage storage(NULL, NULL);
+    Storage storage(false);
     registerAccount(&storage,
                     username, usernameLen,
                     password, passwordLen,
