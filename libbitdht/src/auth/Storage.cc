@@ -71,8 +71,32 @@ bool Storage::writeMetadataFile(char* metadataBuf, const unsigned int metadataLe
     return writeFile(metadataBuf, metadataLen, filename);
 }
 
-void Storage::readFileFromDisk(const char* const filename,
-                               char* buf, unsigned int &bufLen)
+
+bool Storage::readFile(const char* const filename,
+                       char* buf,
+                       unsigned int &bufLen)
+{
+    if(mUseDHT == true)
+    {
+        bdNodeId key;
+        memcpy(key.data, filename, BITDHT_KEY_LEN);
+
+        std::string value;
+
+        bool ok = getDHTValue(*mTargetNode, key, value);
+        if(ok)
+        {
+            memcpy(buf, value.data(), value.size());
+            bufLen = value.size();
+        }
+        return ok;
+    }
+    return readFileFromDisk(filename, buf, bufLen);
+}
+
+bool Storage::readFileFromDisk(const char* const filename,
+                               char* buf,
+                               unsigned int &bufLen)
 {
     unsigned int position = 0;
     std::ifstream infile(filename);
@@ -90,6 +114,7 @@ void Storage::readFileFromDisk(const char* const filename,
     {
         std::cout << "File" << filename << "could not be opened." << std::endl;
     }
+    return true;
 }
 
 bool Storage::postDHTValue(bdId &targetNode,
@@ -102,10 +127,12 @@ bool Storage::postDHTValue(bdId &targetNode,
     // check for results
     while(false == mBitdhtHandler->m_postHashGotResult)
     {
-        sleep(10);
+        sleep(5);
     }
 
-    return mBitdhtHandler->m_postHashSuccess;
+    bool status = mBitdhtHandler->m_postHashSuccess;
+    mBitdhtHandler->clearResult();
+    return status;
 }
 
 
@@ -120,7 +147,7 @@ bool Storage::getDHTValue(bdId &targetNode,
     {
         sleep(10);
     }
-
     value = mBitdhtHandler->m_getHashValue;
+    mBitdhtHandler->clearResult();
     return true;
 }

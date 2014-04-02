@@ -82,7 +82,6 @@ void registerAccount(Storage *storage,
 
     // 4: FKS ← encryptKKS (Kx1||Kx2|| . . .)
     //    encrypt PGP auth data into FKS
-
     char FKS[FKS_ENCRYPTED_DATA_LEN];
     memset(FKS, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int FKSEncryptedLen = FKS_ENCRYPTED_DATA_LEN;
@@ -146,7 +145,7 @@ void registerAccount(Storage *storage,
     // 12: while DHT.put(uname, fLI) fails
     // make sure username is null terminated
     username[usernameLen] = '\0';
-    storage->writeFileToDisk(metadataFilename, metadataFilenameLen, username);
+    storage->writeFile(metadataFilename, metadataFilenameLen, username);
 
 
     // 13: uname ← User.input(“Choose new username:”)
@@ -312,7 +311,7 @@ void interactiveLogin(Storage *storage,
     char metadataFileName[FILE_NAME_LEN];
     memset(metadataFileName, '\0', FILE_NAME_LEN);
     unsigned int filenameLen = FILE_NAME_LEN;
-    storage->readFileFromDisk(username, metadataFileName, filenameLen);
+    storage->readFile(username, metadataFileName, filenameLen);
 
     unsigned int salt = 0;
     char filenameKS[FKS_ENCRYPTED_DATA_LEN];
@@ -346,7 +345,7 @@ void getMetadata(Storage *storage,
     char metadataFile[METADATA_SIZE];
     memset(metadataFile, '\0', METADATA_SIZE);
     unsigned int metadataFileLen = METADATA_SIZE;
-    storage->readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
+    storage->readFile(metadataFileName, metadataFile, metadataFileLen);
 
     // Decrypt and unpack metadata file
     // 12:   salt ← FLI.salt
@@ -373,7 +372,7 @@ void getPGPKey(Storage *storage,
     char encryptedFKS[FKS_ENCRYPTED_DATA_LEN];
     memset(encryptedFKS, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int encryptedFKSLen = FKS_ENCRYPTED_DATA_LEN;
-    storage->readFileFromDisk(filenameKS, encryptedFKS, encryptedFKSLen);
+    storage->readFile(filenameKS, encryptedFKS, encryptedFKSLen);
 
     // 17: Kx1, Kx2,... ← decryptKKS (FKS)
     // decrypt FKS contents using key: KKS

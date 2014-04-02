@@ -26,11 +26,6 @@ public:
             UdpBitDht *const bitdht=NULL,
             bdId *const targetNode=NULL);
 
-    // write data to disk.
-    bool writeFileToDisk(char* data, int dataLen, char* filename);
-
-    bool writeFile(char* data, int dataLen, char* filename);
-
     // Specifically writes the key store file (FKS)to disk. FKS is the encrypted
     // PGP file.
     // This function gives the FKS file a filename, and sets the
@@ -48,16 +43,26 @@ public:
                            char* const filename,
                            unsigned int &filenameLen);
 
-    // bufLen[in] the length of buf that can be used
-    // bufLen[out] the length of the data that was written to buf
-    void readFileFromDisk(const char* const filename,
-                          char* buf, unsigned int &bufLen);
+    // Calls into writeFileToDisk or postDHTValue depending if mUseDHT is set.
+    bool writeFile(char* data, int dataLen, char* filename);
 
+    // Calls readFileFromDisk or getDHTValue depending if mUseDHT is set.
+    bool readFile(const char* const filename,
+                  char* buf,
+                  unsigned int &bufLen);
+
+private:
+    bool writeFileToDisk(char* data, int dataLen, char* filename);
 
     bool postDHTValue(bdId &targetNode,
                       bdNodeId key,
                       std::string hash,
                       std::string secret);
+
+    // bufLen[in] the length of buf that can be used
+    // bufLen[out] the length of the data that was written to buf
+    bool readFileFromDisk(const char* const filename,
+                          char* buf, unsigned int &bufLen);
 
     bool getDHTValue(bdId &targetNode,
                      bdNodeId key,
