@@ -9,22 +9,29 @@
 #ifndef PASSWORD_AUTH_H
 #define PASSWORD_AUTH_H
 
+#include "Storage.h"
+
+// class Storage;
+
 // Entry point for passwords auth. Main logic is here.
 bool auth();
 
 // Creates all the necessary parts for an account, writes them using Storage.h.
-void registerAccount(char* username, unsigned int usernameLen,
+void registerAccount(Storage *storage,
+                     char* username, unsigned int usernameLen,
                      char* password, unsigned int passwordLen,
                      char* pgpkey, unsigned int pgpkeyLen);
 
 // Login
-void interactiveLogin(char* username,
+void interactiveLogin(Storage *storage,
+                      char* username,
                       char* password, unsigned int passwordLen,
                       char* const PGP, unsigned int &PGPLen);
 
 // loads metadata from disk
 // gets the salt, and decrypts the rest using KLI
-void getMetadata(char* const metadataFileName,
+void getMetadata(Storage *storage,
+                 char* const metadataFileName,
                  const char* const password,
                  const unsigned int passwordLen,
                  unsigned int &salt,
@@ -37,7 +44,8 @@ void getMetadata(char* const metadataFileName,
 
 // Reads key store file from disk, decrypts it using 'key' and returns contents
 // (which is the PGP key pair) in outbuf
-void getPGPKey(const char* const key,
+void getPGPKey(Storage *storage,
+               const char* const key,
                const char* const filenameKS, const unsigned int filenameKSLen,
                char* const outbuf, unsigned int &outbufLen);
 
@@ -45,12 +53,12 @@ void getPGPKey(const char* const key,
 // a single buffer then encrypts that buffer using KLI as the hash.
 // Prefixes the buffer with the salt.
 // Puts the final data into outbuf.
-void packMedataDataFile(unsigned int salt,
-                        char* KLI, unsigned int KLILen,
-                        char* filenameFKS, unsigned int filenameLen,
-                        char* KKS, unsigned int KKSLen,
-                        char* KW, unsigned int KWLen,
-                        char* outbuf, unsigned int &outbufLen);
+void packMetaDataFile(unsigned int salt,
+                      char* KLI, unsigned int KLILen,
+                      char* filenameFKS, unsigned int filenameLen,
+                      char* KKS, unsigned int KKSLen,
+                      char* KW, unsigned int KWLen,
+                      char* outbuf, unsigned int &outbufLen);
 
 // Given a password and buffer data, unpack the buffer and decrypt the content
 // into their respective buffers.

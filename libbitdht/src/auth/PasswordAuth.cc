@@ -25,8 +25,8 @@
 #include <openssl/sha.h>
 
 #include "PasswordAuth.h"
-#include "Storage.h"
 #include "AuthCryptoFns.h"
+// #include "Storage.h"
 
 #define USERNAME_LEN 64
 #define PASSWORD_LEN 64
@@ -65,7 +65,9 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
 
-    registerAccount(username, USERNAME_LEN,
+    Storage storage(NULL, NULL);
+    registerAccount(&storage,
+                    username, USERNAME_LEN,
                     password, PASSWORD_LEN,
                     pgpkey, PGP_KEY_LEN);
 
@@ -76,7 +78,8 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     return true;
 }
 
-void registerAccount(char* username, unsigned int usernameLen,
+void registerAccount(Storage *storage,
+                     char* username, unsigned int usernameLen,
                      char* password, unsigned int passwordLen,
                      char* pgpkey, unsigned int pgpkeyLen)
 {
@@ -102,7 +105,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     char filenameFKS[FILE_NAME_LEN];
     memset(filenameFKS, '\0', FILE_NAME_LEN);
     unsigned int filenameFKSLen = FILE_NAME_LEN;
-    writeFKSFile(FKS, FKSEncryptedLen, filenameFKS, filenameFKSLen);
+    storage->writeFKSFile(FKS, FKSEncryptedLen, filenameFKS, filenameFKSLen);
     std::cout << "5: fKS ← Storage.create(FKS)" << filenameFKS << std::endl;
 
     // 6: salt ← generateSalt()
@@ -132,7 +135,7 @@ void registerAccount(char* username, unsigned int usernameLen,
     unsigned int metadataLen = METADATA_SIZE;
     // TODO: Could make a class for the metadata file, which handled (de)serialise
     //       It could also have a DHT write fn.
-    packMedataDataFile(salt,
+    packMetaDataFile(salt,
                        KLI, SHA_DIGEST_LENGTH,
                        filenameFKS, filenameFKSLen,
                        KKS, KEY_LEN,
@@ -145,13 +148,13 @@ void registerAccount(char* username, unsigned int usernameLen,
     char metadataFilename[FILE_NAME_LEN];
     memset(metadataFilename, '\0', FILE_NAME_LEN);
     unsigned int metadataFilenameLen = FILE_NAME_LEN;
-    writeMetadataFile(metadataBuff, metadataLen,
-                      metadataFilename, metadataFilenameLen);
+    storage->writeMetadataFile(metadataBuff, metadataLen,
+                               metadataFilename, metadataFilenameLen);
 
     // 12: while DHT.put(uname, fLI) fails
     // make sure username is null terminated
     username[usernameLen] = '\0';
-    writeFileToDisk(metadataFilename, metadataFilenameLen, username);
+    storage->writeFileToDisk(metadataFilename, metadataFilenameLen, username);
 
 
     // 13: uname ← User.input(“Choose new username:”)
@@ -160,12 +163,12 @@ void registerAccount(char* username, unsigned int usernameLen,
     printf("end!\n");
 }
 
-void packMedataDataFile(unsigned int salt,
-                        char* KLI, unsigned int KLILen,
-                        char* filenameFKS, unsigned int filenameLen,
-                        char* KKS, unsigned int KKSLen,
-                        char* KW, unsigned int KWLen,
-                        char* outbuf, unsigned int &outbufLen)
+void packMetaDataFile(unsigned int salt,
+                      char* KLI, unsigned int KLILen,
+                      char* filenameFKS, unsigned int filenameLen,
+                      char* KKS, unsigned int KKSLen,
+                      char* KW, unsigned int KWLen,
+                      char* outbuf, unsigned int &outbufLen)
 {
     // prefix the salt
     // concatenate the data for the metadata file
@@ -307,7 +310,8 @@ Algorithm 2 Login
 25: Storage.write(fLI,FLI) // using KW
 26: end if
 */
-void interactiveLogin(char* username,
+void interactiveLogin(Storage *storage,
+                      char* username,
                       char* password, unsigned int passwordLen,
                       char* const PGP, unsigned int &PGPLen)
 {
@@ -316,7 +320,7 @@ void interactiveLogin(char* username,
     char metadataFileName[FILE_NAME_LEN];
     memset(metadataFileName, '\0', FILE_NAME_LEN);
     unsigned int filenameLen = FILE_NAME_LEN;
-    readFileFromDisk(username, metadataFileName, filenameLen);
+    storage->readFileFromDisk(username, metadataFileName, filenameLen);
 
     unsigned int salt = 0;
     char filenameKS[FKS_ENCRYPTED_DATA_LEN];
@@ -326,14 +330,15 @@ void interactiveLogin(char* username,
     char KW[KEY_LEN];
     unsigned int KWLen = 0;
 
-    getMetadata(metadataFileName, password, passwordLen, salt,
+    getMetadata(storage, metadataFileName, password, passwordLen, salt,
                 filenameKS, filenameKSLen,
                 KKS, KKSLen, KW, KWLen);
 
-    getPGPKey(KKS, filenameKS, filenameKSLen, PGP, PGPLen);
+    getPGPKey(storage, KKS, filenameKS, filenameKSLen, PGP, PGPLen);
 }
 
-void getMetadata(char* const metadataFileName,
+void getMetadata(Storage *storage,
+                 char* const metadataFileName,
                  const char* const password,
                  const unsigned int passwordLen,
                  unsigned int &salt,
@@ -349,7 +354,7 @@ void getMetadata(char* const metadataFileName,
     char metadataFile[METADATA_SIZE];
     memset(metadataFile, '\0', METADATA_SIZE);
     unsigned int metadataFileLen = METADATA_SIZE;
-    readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
+    storage->readFileFromDisk(metadataFileName, metadataFile, metadataFileLen);
 
     // Decrypt and unpack metadata file
     // 12:   salt ← FLI.salt
@@ -366,7 +371,8 @@ void getMetadata(char* const metadataFileName,
                        KW, KWLen);
 }
 
-void getPGPKey(const char* const key,
+void getPGPKey(Storage *storage,
+               const char* const key,
                const char* const filenameKS, const unsigned int filenameKSLen,
                char* const outbuf, unsigned int &outbufLen)
 {
@@ -375,7 +381,7 @@ void getPGPKey(const char* const key,
     char encryptedFKS[FKS_ENCRYPTED_DATA_LEN];
     memset(encryptedFKS, '\0', FKS_ENCRYPTED_DATA_LEN);
     unsigned int encryptedFKSLen = FKS_ENCRYPTED_DATA_LEN;
-    readFileFromDisk(filenameKS, encryptedFKS, encryptedFKSLen);
+    storage->readFileFromDisk(filenameKS, encryptedFKS, encryptedFKSLen);
 
     // 17: Kx1, Kx2,... ← decryptKKS (FKS)
     // decrypt FKS contents using key: KKS

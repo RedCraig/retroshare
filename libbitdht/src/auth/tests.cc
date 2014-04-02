@@ -1,10 +1,9 @@
-/*
+    /*
  * Author: Craig McInnes
  * Date: 10/03/2014
  *
  * Test fns for Password auth.
 */
-
 #include <assert.h>
 #include <openssl/sha.h>
 #include <string.h>
@@ -26,7 +25,6 @@
 
 void test_registerAccount()
 {
-
     char username[USERNAME_LEN] = "my name\0";
     unsigned int usernameLen = 8;
     char password[PASSWORD_LEN] = "my password";
@@ -55,7 +53,9 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 \0";
     unsigned int pgpkeyLen = 1066;
 
-    registerAccount(username, usernameLen,
+    Storage storage(NULL, NULL);
+    registerAccount(&storage,
+                    username, usernameLen,
                     password, passwordLen,
                     pgpkey, pgpkeyLen);
 
@@ -67,7 +67,8 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
     //       value.
 	char readPGPkey[PGP_KEY_LEN];
 	unsigned int readPGPkeyLen = PGP_KEY_LEN;
-    interactiveLogin(username, password, passwordLen, readPGPkey, readPGPkeyLen);
+    interactiveLogin(&storage, username, password, passwordLen,
+                     readPGPkey, readPGPkeyLen);
     assert(memcmp(pgpkey, readPGPkey, readPGPkeyLen) == 0);
 //    std::cout << pgpkey << std::endl;
 //    std::cout << readPGPkey << std::endl;
@@ -147,12 +148,12 @@ void test_packUnpackMetadata()
     memset(packedMetadataBuff, '\0', METADATA_SIZE);
     unsigned int metadataLen = METADATA_SIZE;
 
-    packMedataDataFile(salt,
-                       KLI, SHA_DIGEST_LENGTH,
-                       FKS, FKSLen,
-                       KKS, KEY_LEN,
-                       KW, KEY_LEN,
-                       packedMetadataBuff, metadataLen);
+    packMetaDataFile(salt,
+                     KLI, SHA_DIGEST_LENGTH,
+                     FKS, FKSLen,
+                     KKS, KEY_LEN,
+                     KW, KEY_LEN,
+                     packedMetadataBuff, metadataLen);
 
     // vars to store unpacked data
     unsigned int upSalt = 0;

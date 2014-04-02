@@ -10,9 +10,14 @@
 #include "Storage.h"
 #include "bitdht/bdiface.h"
 
+Storage::Storage(BitDhtHandler *bitdhtHandler, UdpBitDht *bitdht)
+{
+    mBitdhtHandler = bitdhtHandler;
+    mBitdht = bitdht;
+}
 
-void writeFKSFile(char* data, int dataLen, char* filename,
-                  unsigned int &filenameLen)
+void Storage::writeFKSFile(char* data, int dataLen, char* filename,
+                           unsigned int &filenameLen)
 {
     // storage engine determines filename
     filenameLen = 24;
@@ -21,7 +26,7 @@ void writeFKSFile(char* data, int dataLen, char* filename,
     writeFileToDisk(data, dataLen, filename);
 }
 
-void writeFileToDisk(char* data, int dataLen, char* filename)
+void Storage::writeFileToDisk(char* data, int dataLen, char* filename)
 {
     std::ofstream outfile;
     outfile.open(filename, std::ios_base::trunc);
@@ -29,8 +34,8 @@ void writeFileToDisk(char* data, int dataLen, char* filename)
     outfile.close();
 }
 
-void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
-                       char* const filename, unsigned int &filenameLen)
+void Storage::writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
+                                char* const filename, unsigned int &filenameLen)
 {
     // storage engine determines filename
     filenameLen = 26;
@@ -39,8 +44,8 @@ void writeMetadataFile(char* metadataBuf, const unsigned int metadataLen,
     writeFileToDisk(metadataBuf, metadataLen, filename);
 }
 
-void readFileFromDisk(const char* const filename,
-                      char* buf, unsigned int &bufLen)
+void Storage::readFileFromDisk(const char* const filename,
+                               char* buf, unsigned int &bufLen)
 {
     unsigned int position = 0;
     std::ifstream infile(filename);
@@ -60,29 +65,63 @@ void readFileFromDisk(const char* const filename,
     }
 }
 
-void getHash(bdNode &node, const unsigned char *const key)
+bool Storage::postDHTValue(bdId &targetNode,
+                           bdNodeId key,
+                           std::string hash,
+                           std::string secret)
 {
-    // TODO: do we call find_node here (and wait for it to finish)
-    //   so that we have a bdId to make the request against?
-    //   Or do we make this fn expect a bdId targetNode, and perform the
-    //   find_node search outside of here.
-    bdId id;
+    mBitdht->postHash(targetNode, key, hash, secret);
 
-    bdNodeId nodeId;
-    memcpy(nodeId.data, key, BITDHT_KEY_LEN);
-
-    node.send_get_hash_query(id, nodeId);
-}
-
-// TODO: getHashCallback
-void getHashCallback(std::list<std::string> &values)
-{
-    std::cerr << " hash peers:";
-    std::list<std::string>::iterator it;
-    for(it = values.begin(); it != values.end(); it++)
+    // check for results
+    while(false == mBitdhtHandler->m_postHashGotResult)
     {
-        std::cerr << " hash content here";
-        // bdPrintCompactPeerId(std::cerr, *it);
+        sleep(10);
     }
-    std::cerr << std::endl;
+
+    return mBitdhtHandler->m_postHashSuccess;
 }
+
+
+bool Storage::getDHTValue(bdId &targetNode,
+                          bdNodeId key,
+                          std::string &value)
+{
+    mBitdht->getHash(targetNode, key);
+
+    // check for results
+    while(false == mBitdhtHandler->m_gotHashResult)
+    {
+        sleep(10);
+    }
+
+    value = mBitdhtHandler->m_getHashValue;
+    return true;
+}
+
+
+// void Storage::getHash(bdNode &node, const unsigned char *const key)
+// {
+//     // TODO: do we call find_node here (and wait for it to finish)
+//     //   so that we have a bdId to make the request against?
+//     //   Or do we make this fn expect a bdId targetNode, and perform the
+//     //   find_node search outside of here.
+//     bdId id;
+
+//     bdNodeId nodeId;
+//     memcpy(nodeId.data, key, BITDHT_KEY_LEN);
+
+//     node.send_get_hash_query(id, nodeId);
+// }
+
+// // TODO: getHashCallback
+// void Storage::getHashCallback(std::list<std::string> &values)
+// {
+//     std::cerr << " hash peers:";
+//     std::list<std::string>::iterator it;
+//     for(it = values.begin(); it != values.end(); it++)
+//     {
+//         std::cerr << " hash content here";
+//         // bdPrintCompactPeerId(std::cerr, *it);
+//     }
+//     std::cerr << std::endl;
+// }
