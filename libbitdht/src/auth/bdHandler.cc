@@ -52,12 +52,22 @@
 
 BitDhtHandler::BitDhtHandler()
 : m_gotHashResult(false),
-  m_getHashValue()
+  m_getHashValue(),
+  m_postHashGotResult(false),
+  m_postHashSuccess(false)
 {
 }
 BitDhtHandler::~BitDhtHandler()
 {
     ;
+}
+
+void BitDhtHandler::clearResult()
+{
+    m_gotHashResult = false;
+    m_getHashValue.clear();
+    m_postHashGotResult = false;
+    m_postHashSuccess = false;
 }
 
 bool BitDhtHandler::FindNode(UdpBitDht *udpBitDht, bdNodeId *peerId)

@@ -50,6 +50,8 @@ public:
     BitDhtHandler();
     ~BitDhtHandler();
 
+    void clearResult();
+
     // start the find_node request
     bool FindNode(UdpBitDht *udpBitDht, bdNodeId *peerId);
     bool GetHash(UdpBitDht *udpBitDht, bdId *targetNode, bdNodeId *key);
