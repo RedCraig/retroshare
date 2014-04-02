@@ -42,7 +42,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "../auth/Storage.h"
+// #include "../auth/Storage.h"
 
 #define BITDHT_QUERY_START_PEERS    10
 #define BITDHT_QUERY_NEIGHBOUR_PEERS    8
