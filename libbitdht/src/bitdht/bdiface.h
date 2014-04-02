@@ -48,7 +48,7 @@
 
 
 
-#define BITDHT_MAX_PKTSIZE 1024*5
+#define BITDHT_MAX_PKTSIZE 1024*10
 
 #define BITDHT_TTL 64
 

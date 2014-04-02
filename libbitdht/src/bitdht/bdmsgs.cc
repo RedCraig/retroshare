@@ -367,7 +367,7 @@ int bitdht_post_hash_msg(bdToken *transId,
     be_node *idnode = be_create_str_wlen((char *) id->data, BITDHT_KEY_LEN);
     be_node *tidnode = be_create_str_wlen((char *) transId->data,
                                           BITDHT_KEY_LEN);
-    be_node *hashnode = be_create_str_wlen((char *) key->data, 1024*5);
+    be_node *hashnode = be_create_str_wlen((char *) key->data, BITDHT_KEY_LEN);
     be_node *value = be_create_str_wlen((char *) hash.data(), hash.size());
     be_node *besecret = be_create_str_wlen((char *) secret.data(),
                                            secret.size());
