@@ -28,15 +28,6 @@
 #include "AuthCryptoFns.h"
 // #include "Storage.h"
 
-#define USERNAME_LEN 64
-#define PASSWORD_LEN 64
-#define KEY_LEN 16
-#define PGP_PUB_KEY_LEN 2048
-#define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
-#define FKS_ENCRYPTED_DATA_LEN 1024*3
-#define FILE_NAME_LEN 32
-#define METADATA_SIZE 1024*5
-
 
 bool auth()
 {
@@ -65,7 +56,7 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
 --LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
 \0";
 
-    Storage storage(NULL, NULL);
+    Storage storage(false);
     registerAccount(&storage,
                     username, USERNAME_LEN,
                     password, PASSWORD_LEN,
@@ -151,6 +142,7 @@ void registerAccount(Storage *storage,
     storage->writeMetadataFile(metadataBuff, metadataLen,
                                metadataFilename, metadataFilenameLen);
 
+    // Write fli
     // 12: while DHT.put(uname, fLI) fails
     // make sure username is null terminated
     username[usernameLen] = '\0';

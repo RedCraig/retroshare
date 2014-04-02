@@ -11,7 +11,16 @@
 
 #include "Storage.h"
 
-// class Storage;
+#define USERNAME_LEN 64
+#define PASSWORD_LEN 64
+#define KEY_LEN 16
+#define PGP_PUB_KEY_LEN 1024*5
+#define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
+#define FKS_ENCRYPTED_DATA_LEN 1024*5
+#define FILE_NAME_LEN 32
+#define METADATA_SIZE 1024*5
+
+
 
 // Entry point for passwords auth. Main logic is here.
 bool auth();
