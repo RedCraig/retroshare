@@ -22,7 +22,7 @@ EGOBJ = Storage.o AuthCryptoFns.o PasswordAuth.o bdHandler.o
 all: main msgtest
 
 main: $(EGOBJ)
-	$(CXX) $(CXXFLAGS) tests.o -o tests $(EGOBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o tests tests.cc $(EGOBJ) $(LIBS)
 
 # test: tests.o
 # 	$(CXX) $(CXXFLAGS) -o tests tests.o $(LIBS)
@@ -31,4 +31,4 @@ msgtest: udpbitdht_msgtest.o
 	$(CXX) $(CXXFLAGS) $(EGOBJ) udpbitdht_msgtest.o -o udpbitdht_msgtest  $(LIBS)
 
 clean:
-	rm -f $(EGOBJ) $(EXEC)
+	rm -f $(EGOBJ) tests.o $(EXEC)
