@@ -23,6 +23,23 @@
  *
  */
 
+/*
+This test program needs at least two instances to run.
+It takes various command line args so that it can look up the other instance.
+// first dht
+./udpbitdht_msgtest -b localboot_find3074.txt -p3074 -ub8033e8acab57e170b612372727b38a60f28b76e -tb8033e8acab57e170b612372727b38a60f28b76e
+
+// second dht which finds first
+./udpbitdht_msgtest -b localboot_find3074.txt -p3099 -b localboot_find3074.txt -t6238303333653861636162353765313730623631
+
+It tests finding a node, posting a hash to that node, and getting that same
+hash back from the node.
+*/
+
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <assert.h>
 
 #include "udp/udpbitdht.h"
 #include "udp/udpstack.h"
@@ -30,18 +47,9 @@
 #include "bitdht/bdmanager.h"
 #include "bitdht/bdiface.h"
 #include "bdHandler.h"
+#include "auth/Storage.h"
+#include "auth/PasswordAuth.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
-
-/*******************************************************************
- * DHT test program.
- *
- * This should create two nodemanagers(?) which can send each other messages.
- * Wish me luck.
- */
 
 #define MAX_MESSAGE_LEN 10240
 #define DEF_PORT    7500
@@ -301,7 +309,8 @@ int main(int argc, char **argv)
     UdpStack *udpstack = new UdpStack(local);
 
     /* create bitdht component */
-    // 99 is the application version number
+    // 99 is the application version number I'm using so that other retroshare
+    // clients dont't connect.
     std::string dhtVersion = "db99ST";
     UdpBitDht *bitdht = new UdpBitDht(udpstack, &id, dhtVersion,
                                       bootfile, fns);
@@ -309,17 +318,12 @@ int main(int argc, char **argv)
     /* add in the stack */
     udpstack->addReceiver(bitdht);
 
-
-    // make our callback handler class (which also makes the query)
+    // Make our callback handler class (which also makes the query)
     BitDhtHandler bitdhtHandler;
-    /* register callback display */
-    // BitDhtHandler *bitDhtHandler = new BitDhtHandler();
     bitdht->addCallback(&bitdhtHandler);
 
     /* startup threads */
-    //udpstack->start();
     bitdht->start();
-
 
     /* setup best mode for quick search */
     uint32_t dhtFlags = BITDHT_MODE_TRAFFIC_HIGH | BITDHT_MODE_RELAYSERVERS_IGNORED;
@@ -349,9 +353,30 @@ int main(int argc, char **argv)
         }
     }
 
+    // Target node for query. If doing a findNode query, this will be set
+    // with the result.
+    bdId targetNode;
+    if(!doFindNode)
+    {
+        bdNodeId targetID;
+        memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
+        struct sockaddr_in target_addr;
+        memset(&target_addr, 0, sizeof(target_addr));
+        target_addr.sin_family = AF_INET;
+        char *ip = {"127.0.0.1"};
+        target_addr.sin_addr.s_addr = inet_addr(ip);
+        target_addr.sin_port = htons(3074);
+        bdId hardTargetNode(targetID, target_addr);
+        targetNode = hardTargetNode;
+    }
+
+    bool useDHT = true;
+    Storage storage(useDHT, &bitdhtHandler, bitdht, &targetNode);
+
+    bool doFindPostGet = false;
     bool foundNode = false;
-    bool sentGetHash = false;
-    bool sentPostHash = false;
+    bool sentGetHash = true;
+    bool sentPostHash = true;
     while(1)
     {
         sleep(10);
@@ -366,7 +391,7 @@ int main(int argc, char **argv)
             bitdht->printDht();
 
             bdId resultId;
-            if(doFindNode && foundNode == false)
+            if(doFindPostGet && doFindNode && foundNode == false)
             {
                 findNode(bitdhtHandler, bitdht, findPeerName, resultId);
 
@@ -385,32 +410,35 @@ int main(int argc, char **argv)
             }
 
             // post_hash
-            if(!sentPostHash)
+            if(doFindPostGet && !sentPostHash)
             {
-                bdId targetNode;
-                if(!doFindNode)
-                {
-                    bdNodeId targetID;
-                    memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
-                    struct sockaddr_in target_addr;
-                    memset(&target_addr, 0, sizeof(target_addr));
-                    target_addr.sin_family = AF_INET;
-                    char *ip = {"127.0.0.1"};
-                    target_addr.sin_addr.s_addr = inet_addr(ip);
-                    target_addr.sin_port = htons(3074);
-                    bdId hardTargetNode(targetID, target_addr);
-                    targetNode = hardTargetNode;
-                }
-                else
-                {
-                    // If we've done the find_node request, then use it's
-                    // result as the targetNode.
-                    targetNode = resultId;
-                }
+                // If we've done the find_node request, then use it's
+                // result as the targetNode.
+                targetNode = resultId;
 
                 bdNodeId key;
                 memcpy(key.data, "USERNAME_CRAIG", 14);
-                std::string value = "I AM A HASH VALUE";
+                std::string value = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
+Version: OpenPGP:SDK v0.9\
+\
+xsBNBFMYXjUBCACdmfb/fC5u3/oIsbnpKXCqZk3OCx0YSiWAg2SeuyLPj1DES06W\
+Yx2eHs0ci7noO6aXbLf0f9+JIUSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
+tT1BM3JRvIIEBOSlgEKYzJxb0onX4vQ1J1/sQSi1lZUmy0O6svCNmqFg/Kt9Aa3S\
+gNaOeaPDr+hAoYpfyp7m5zYsA5r6Rex6O8qRzTqkTYEAtTq5jAms01YrtluD5GNB\
+RZuhiXNobfosBueYSuK5KlpOJczn8qViUSEPnybbodcZDZpmcdliyQoIqtJiVRny\
+5gMWn08vLkpX9gzz04gNLJvzHN7GWiiP7/G1ABEBAAHNJVJlZENyYWlnIChHZW5l\
+cmF0ZWQgYnkgUmV0cm9TaGFyZSkgPD7CwF8EEwECABMFAlMYXjUJEP3jPOYQGt7o\
+AhkBAACn6Af9GP/qezpV6+8uO7dcMCen4GwWcKR1OA3haL3KUc8II68aFOoct7qr\
+FsFOw6Cn378w3IC3gAGObUKpWYGU/7b6Gh1i6W6whYl7tWFLevhcSkU4fZF9X3PR\
+mgs8AiofnubevDGGH6M0YBBAnTdsrUtsm4HRDBMLpitt2SQCYc5gnAUuaCRY63Fg\
+Ax+P/Kldeso15+dlrpjGr5xZMDWEubWH2GpELJJSOb1CCC3rANcnxUT18kLFBB2K\
+jKSTD9ndswUv4mCH9DIaccfMHO0r2XjevAox7gJRGQpbr0wj79Wkb5JDb8z0PFcK\
+FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
+=2kN4\
+-----END PGP PUBLIC KEY BLOCK-----\
+--SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
+--LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
+\0";
                 std::string secret = "i am a secret";
                 // When this finishes, bitdhtHandler.m_postHashSuccess
                 // indicates success.
@@ -418,28 +446,11 @@ int main(int argc, char **argv)
                 sentPostHash = true;
             }
             // get_hash
-            else if(!sentGetHash)
+            else if(doFindPostGet && !sentGetHash)
             {
-                bdId targetNode;
-                if(!doFindNode)
-                {
-                    bdNodeId targetID;
-                    memcpy(targetID.data, findPeerName.data(), BITDHT_KEY_LEN);
-                    struct sockaddr_in target_addr;
-                    memset(&target_addr, 0, sizeof(target_addr));
-                    target_addr.sin_family = AF_INET;
-                    char *ip = {"127.0.0.1"};
-                    target_addr.sin_addr.s_addr = inet_addr(ip);
-                    target_addr.sin_port = htons(3074);
-                    bdId hardTargetNode(targetID, target_addr);
-                    targetNode = hardTargetNode;
-                }
-                else
-                {
-                    // If we've done the find_node request, then use it's
-                    // result as the targetNode.
-                    targetNode = resultId;
-                }
+                // If we've done the find_node request, then use it's
+                // result as the targetNode.
+                targetNode = resultId;
 
                 bdNodeId key;
                 memcpy(key.data, "USERNAME_CRAIG", 14);
@@ -450,6 +461,78 @@ int main(int argc, char **argv)
                 sentGetHash = true;
             }
 
+            // register account using password based auth
+            char username[USERNAME_LEN] = "my name\0";
+            unsigned int usernameLen = 8;
+            char password[PASSWORD_LEN] = "my password";
+            unsigned int passwordLen = 11;
+
+            char pgpkey[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
+Version: OpenPGP:SDK v0.9\
+\
+xsBNBFMYXZ4BCADRI6QmxQ83NStCZ2ryPsNxw70IDJLmYOpuAI3eS+mUUWeRwP8M\
+RLjjOgYnL3Ij0sp/ZTDTOnPQoYNmiEKu3altvR07jNXMaqz2KVSDQnl+ZKrRqnhd\
+H18WRqOAUvMcDynSMr3tipnVMaDSh1on2l2jE75IxXjxXYTjxM/GtP4ZjuBFVnT7\
+8tjhDyk9YFYzLZoWDEcMqQ8JGyzJmwLGrxs5OTCXPInUKTyS/62FEWHKuGbK2cKG\
+Ky4WR+SN4w0OdnzLpgg5EUulJp+IP+JzJmGGhmVJRugCho3hMt1T0W6c4d4vUX4R\
+djOyhnveG7z3Fno6xXimrh3h6liX0AW1Had/ABEBAAHNJVJlZENyYWlnIChHZW5l\
+cmF0ZWQgYnkgUmV0cm9TaGFyZSkgPD7CwF8EEwECABMFAlMYXZ4JECSqjas2zLG2\
+AhkBAADqFggAhzCGB4DymuuUlMo0CseCif/czmAt/1ScY8AowNG7XswQ0bXRs15o\
+jSad3LD5qsEeGv2NKmVxxkymysnBaousVYjeiSGAy/qp9H+tSWMwxWZ5Dx+htcmy\
+MvnX1+BH1tqSa3r/w2VzSIQQcixcDTzxmr74juDcyeiMfKpiRjh/hUZuz4c+YTC1\
+F6ZXxcFCaBZ+3q9hEmAM7v0TRGivoItrQxm46+wvEzigg8E7lWEfSDPHJe942ZyU\
+pC6Z4oa/jtbEHXxYNdTEYIIcJiIJNmdUydRWhtAbOIZ8G7gJCIzSKXPZYZH8Fni7\
+xBJCZgifpsBXqa7Dq9MYmVW2epPeDg19lw==\
+=2MaV\
+-----END PGP PUBLIC KEY BLOCK-----\
+\
+-----BEGIN PGP PRIVATE KEY BLOCK-----\
+Version: OpenPGP:SDK v0.9\
+\
+xcL9BFMYXZ4BCADRI6QmxQ83NStCZ2ryPsNxw70IDJLmYOpuAI3eS+mUUWeRwP8M\
+RLjjOgYnL3Ij0sp/ZTDTOnPQoYNmiEKu3altvR07jNXMaqz2KVSDQnl+ZKrRqnhd\
+H18WRqOAUvMcDynSMr3tipnVMaDSh1on2l2jE75IxXjxXYTjxM/GtP4ZjuBFVnT7\
+8tjhDyk9YFYzLZoWDEcMqQ8JGyzJmwLGrxs5OTCXPInUKTyS/62FEWHKuGbK2cKG\
+Ky4WR+SN4w0OdnzLpgg5EUulJp+IP+JzJmGGhmVJRugCho3hMt1T0W6c4d4vUX4R\
+djOyhnveG7z3Fno6xXimrh3h6liX0AW1Had/ABEBAAH+AwEC8oCT3eeDn7oAAAAA\
+AAAAAPCwh6qltznpzLDAcKoU/u2naJFSFd2+T7oUiI2bGIMyiDZ/a1Z6tmOCuIhC\
+UHtl+vV0dycfkfg2a51O6VwdZmTM/f7jPWXjX0oGoJ54caPZDrrvOSH1ssgXb65l\
+2W89BjCffmB7BjKQIzn4mq2kXaXCx/iGyrIS8LKB+6StY8rmEu5VEGwpaeZ3s9Gn\
+ERiVQU7NKiCFGa72fisfsIUHMPRLLr1ulgyQdL3ITdY6Nx79UVlrdImO6MPzAUF8\
+gnLhArzXEvaXmSLuuq2EIJmdSxUBkrm31hDI0zDQdMGnVaMGthazqy6JPSE5PYAn\
+RknOPoyTJOrgxBWN26F64e655O48frAZ4YgJr6Tu7OJpena4vjTM+Nz7jtW/CDK6\
+DvrjD2HcZlcDcrYsa54SGaBkfZPW8H4fER/1H8OKH679Mbyez9qIpTWfQTexPhLd\
+QTTBCVAp0TYDixwVh+2xfL4fp+SZbc/b872QJ1Pfu9XMqugrOZA/NP4VYYhUE3g4\
+oc9pwxv1WDAWbq+w/dFBpAdapb+qw7S3JTEVkw9ngmdcPUxpSE72q1puka72Qn65\
+HmCRmQVYzseFHFLDkME4HvGhKXpC05tv7rsqi9BGi74Ph8injXrtNuKbXYbTs0cK\
+529905l6hGNX23CFGojTYOJgtkGQ37dDlLD9k7A7KiXsD3kPAajxk7j/g7GqpU2S\
+YuLMj4DdZ6WyZtXcLF5emI6CO6HwNNwRGtcFUkwFoLuPzhIZJe9Z1FAFS4xoWMIY\
++7YxCnkKEzdiKXLz8BPqCNBdxLOD04GgZEE5VaWjKRzWgiWlrBLqoN2M7IR7MB30\
+rzo7c04XRGTxrW4rxFf1yoRo1r9Ug/GxK21FprFpWdlvoiPoUeuojUVjbU41ie5H\
+zSVSZWRDcmFpZyAoR2VuZXJhdGVkIGJ5IFJldHJvU2hhcmUpIDw+wsBfBBMBAgAT\
+BQJTGF2eCRAkqo2rNsyxtgIZAQAA6hYIAIcwhgeA8prrlJTKNArHgon/3M5gLf9U\
+nGPAKMDRu17MENG10bNeaI0mndyw+arBHhr9jSplccZMpsrJwWqLrFWI3okhgMv6\
+qfR/rUljMMVmeQ8fobXJsjL519fgR9bakmt6/8Nlc0iEEHIsXA088Zq++I7g3Mno\
+jHyqYkY4f4VGbs+HPmEwtRemV8XBQmgWft6vYRJgDO79E0Ror6CLa0MZuOvsLxM4\
+oIPBO5VhH0gzxyXveNmclKQumeKGv47WxB18WDXUxGCCHCYiCTZnVMnUVobQGziG\
+fBu4CQiM0ilz2WGR/BZ4u8QSQmYIn6bAV6muw6vTGJlVtnqT3g4NfZc=\
+=4LBP\
+-----END PGP PRIVATE KEY BLOCK-----\
+";
+            unsigned int pgpkeyLen = 2828;
+
+            registerAccount(&storage,
+                            username, usernameLen,
+                            password, passwordLen,
+                            pgpkey, pgpkeyLen);
+
+
+            // Now login with password auth using those account details
+            char readPGPkey[PGP_KEY_LEN];
+            unsigned int readPGPkeyLen = PGP_KEY_LEN;
+            interactiveLogin(&storage, username, password, passwordLen,
+                             readPGPkey, readPGPkeyLen);
+            assert(memcmp(pgpkey, readPGPkey, readPGPkeyLen) == 0);
         }
 
         std::cerr << "Dht Network Size: ";
