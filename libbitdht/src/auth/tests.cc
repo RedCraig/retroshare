@@ -19,7 +19,7 @@
 // #define PGP_PUB_KEY_LEN 2048
 #define PGP_KEY_LEN PGP_PUB_KEY_LEN+2048
 // #define FKS_ENCRYPTED_DATA_LEN 1024*3
-#define FILE_NAME_LEN 32
+#define FILE_NAME_LEN 20
 #define METADATA_SIZE 1024*5
 
 
@@ -127,7 +127,7 @@ void test_packUnpackMetadata()
 
     // 5: fKS ← Storage.create(FKS)
     //    write FKS (encrypted PGP auth data) into storage
-    char FKS[FILE_NAME_LEN] = "filename_of_key_store_file\0";
+    char FKS[FILE_NAME_LEN] = "key_store_filename\0";
     unsigned int FKSLen = strlen(FKS)+1;
 
     // 6: salt ← generateSalt()
