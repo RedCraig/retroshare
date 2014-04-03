@@ -42,7 +42,8 @@ bool Storage::writeFile(char* data, int dataLen, char* filename)
         bdNodeId key;
         memcpy(key.data, filename, BITDHT_KEY_LEN);
 
-        std::string value (data);
+        std::string value;
+        memcpy(value.data, data, dataLen);
 
         // no secret for now, blank string
         std::string secret;
@@ -65,8 +66,8 @@ bool Storage::writeMetadataFile(char* metadataBuf, const unsigned int metadataLe
                                 char* const filename, unsigned int &filenameLen)
 {
     // storage engine determines filename
-    filenameLen = 26;
-    memcpy(filename, "password_auth_metadata.txt", filenameLen);
+    filenameLen = 13;
+    memcpy(filename, "auth_metadata", filenameLen);
     filename[filenameLen] = '\0';
     return writeFile(metadataBuf, metadataLen, filename);
 }
@@ -127,7 +128,7 @@ bool Storage::postDHTValue(bdId &targetNode,
     // check for results
     while(false == mBitdhtHandler->m_postHashGotResult)
     {
-        sleep(5);
+        sleep(2);
     }
 
     bool status = mBitdhtHandler->m_postHashSuccess;
@@ -145,7 +146,7 @@ bool Storage::getDHTValue(bdId &targetNode,
     // check for results
     while(false == mBitdhtHandler->m_gotHashResult)
     {
-        sleep(10);
+        sleep(2);
     }
     value = mBitdhtHandler->m_getHashValue;
     mBitdhtHandler->clearResult();
