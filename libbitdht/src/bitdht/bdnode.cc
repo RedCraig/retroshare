@@ -281,7 +281,7 @@ void bdNode::printState()
 	mQueryHistory.printMsgs();
 #endif
 
-	mAccount.printStats(std::cerr);
+	// mAccount.printStats(std::cerr);
 }
 
 void bdNode::iterationOff()
