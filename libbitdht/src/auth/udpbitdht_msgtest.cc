@@ -373,10 +373,32 @@ int main(int argc, char **argv)
     bool useDHT = true;
     Storage storage(useDHT, &bitdhtHandler, bitdht, &targetNode);
 
+    std::string value = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
+Version: OpenPGP:SDK v0.9\
+\
+xsBNBFMYXjUBCACdmfb/fC5u3/oIsbnpKXCqZk3OCx0YSiWAg2SeuyLPj1DES06W\
+Yx2eHs0ci7noO6aXbLf0f9+JIUSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
+tT1BM3JRvIIEBOSlgEKYzJxb0onX4vQ1J1/sQSi1lZUmy0O6svCNmqFg/Kt9Aa3S\
+gNaOeaPDr+hAoYpfyp7m5zYsA5r6Rex6O8qRzTqkTYEAtTq5jAms01YrtluD5GNB\
+RZuhiXNobfosBueYSuK5KlpOJczn8qViUSEPnybbodcZDZpmcdliyQoIqtJiVRny\
+5gMWn08vLkpX9gzz04gNLJvzHN7GWiiP7/G1ABEBAAHNJVJlZENyYWlnIChHZW5l\
+cmF0ZWQgYnkgUmV0cm9TaGFyZSkgPD7CwF8EEwECABMFAlMYXjUJEP3jPOYQGt7o\
+AhkBAACn6Af9GP/qezpV6+8uO7dcMCen4GwWcKR1OA3haL3KUc8II68aFOoct7qr\
+FsFOw6Cn378w3IC3gAGObUKpWYGU/7b6Gh1i6W6whYl7tWFLevhcSkU4fZF9X3PR\
+mgs8AiofnubevDGGH6M0YBBAnTdsrUtsm4HRDBMLpitt2SQCYc5gnAUuaCRY63Fg\
+Ax+P/Kldeso15+dlrpjGr5xZMDWEubWH2GpELJJSOb1CCC3rANcnxUT18kLFBB2K\
+jKSTD9ndswUv4mCH9DIaccfMHO0r2XjevAox7gJRGQpbr0wj79Wkb5JDb8z0PFcK\
+FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
+=2kN4\
+-----END PGP PUBLIC KEY BLOCK-----\
+--SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
+--LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
+\0";
+
     bool doFindPostGet = false;
     bool foundNode = false;
-    bool sentGetHash = true;
-    bool sentPostHash = true;
+    bool sentGetHash = false;
+    bool sentPostHash = false;
     while(1)
     {
         sleep(10);
@@ -388,7 +410,7 @@ int main(int argc, char **argv)
         {
 
             std::cerr << "BITDHT_MGR_STATE_ACTIVE" << std::endl;
-            bitdht->printDht();
+            // bitdht->printDht();
 
             bdId resultId;
             if(doFindPostGet && doFindNode && foundNode == false)
@@ -414,31 +436,14 @@ int main(int argc, char **argv)
             {
                 // If we've done the find_node request, then use it's
                 // result as the targetNode.
-                targetNode = resultId;
+            	if(foundNode)
+            	{
+            		targetNode = resultId;
+            	}
 
                 bdNodeId key;
-                memcpy(key.data, "USERNAME_CRAIG", 14);
-                std::string value = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
-Version: OpenPGP:SDK v0.9\
-\
-xsBNBFMYXjUBCACdmfb/fC5u3/oIsbnpKXCqZk3OCx0YSiWAg2SeuyLPj1DES06W\
-Yx2eHs0ci7noO6aXbLf0f9+JIUSJUiTdkZZjHBA5FcTy9FbZmlu0zi/Qqs7EXNJT\
-tT1BM3JRvIIEBOSlgEKYzJxb0onX4vQ1J1/sQSi1lZUmy0O6svCNmqFg/Kt9Aa3S\
-gNaOeaPDr+hAoYpfyp7m5zYsA5r6Rex6O8qRzTqkTYEAtTq5jAms01YrtluD5GNB\
-RZuhiXNobfosBueYSuK5KlpOJczn8qViUSEPnybbodcZDZpmcdliyQoIqtJiVRny\
-5gMWn08vLkpX9gzz04gNLJvzHN7GWiiP7/G1ABEBAAHNJVJlZENyYWlnIChHZW5l\
-cmF0ZWQgYnkgUmV0cm9TaGFyZSkgPD7CwF8EEwECABMFAlMYXjUJEP3jPOYQGt7o\
-AhkBAACn6Af9GP/qezpV6+8uO7dcMCen4GwWcKR1OA3haL3KUc8II68aFOoct7qr\
-FsFOw6Cn378w3IC3gAGObUKpWYGU/7b6Gh1i6W6whYl7tWFLevhcSkU4fZF9X3PR\
-mgs8AiofnubevDGGH6M0YBBAnTdsrUtsm4HRDBMLpitt2SQCYc5gnAUuaCRY63Fg\
-Ax+P/Kldeso15+dlrpjGr5xZMDWEubWH2GpELJJSOb1CCC3rANcnxUT18kLFBB2K\
-jKSTD9ndswUv4mCH9DIaccfMHO0r2XjevAox7gJRGQpbr0wj79Wkb5JDb8z0PFcK\
-FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
-=2kN4\
------END PGP PUBLIC KEY BLOCK-----\
---SSLID--660c5d8193c238f2b661aa6715da2338;--LOCATION--laptop;\
---LOCAL--192.168.1.104:2191;--EXT--12.34.56.789:2191;\
-\0";
+                memcpy(key.data, "USERNAME_CRAIG------", 20);
+
                 std::string secret = "i am a secret";
                 // When this finishes, bitdhtHandler.m_postHashSuccess
                 // indicates success.
@@ -446,26 +451,30 @@ FwSK6LclF4xv61JR42mYGMEYbPSu4el1Sw==\
                 sentPostHash = true;
             }
             // get_hash
-            else if(doFindPostGet && !sentGetHash)
+            if(doFindPostGet && !sentGetHash)
             {
                 // If we've done the find_node request, then use it's
                 // result as the targetNode.
-                targetNode = resultId;
+            	if(foundNode)
+				{
+					targetNode = resultId;
+				}
 
                 bdNodeId key;
-                memcpy(key.data, "USERNAME_CRAIG", 14);
+                memcpy(key.data, "USERNAME_CRAIG------", 20);
                 // When this finishes, the hash will be present in:
                 // bitdhtHandler.m_getHashValue.
                 std::string hash = getHash(bitdhtHandler, bitdht,
                                            targetNode, key);
                 sentGetHash = true;
+                assert(memcmp(value.data(), hash.data(), 1018) == 0);
             }
 
             // register account using password based auth
-            char username[USERNAME_LEN] = "my name\0";
-            unsigned int usernameLen = 8;
-            char password[PASSWORD_LEN] = "my password";
-            unsigned int passwordLen = 11;
+            unsigned int usernameLen = 20;
+            char username[USERNAME_LEN] = "username____________";
+            unsigned int passwordLen = 20;
+            char password[PASSWORD_LEN] = "my_password_________";
 
             char pgpkey[PGP_PUB_KEY_LEN] = "-----BEGIN PGP PUBLIC KEY BLOCK-----\
 Version: OpenPGP:SDK v0.9\
