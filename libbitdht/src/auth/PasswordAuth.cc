@@ -308,10 +308,13 @@ void interactiveLogin(Storage *storage,
 {
     // 10:   fLI ← DHT.get(uname)
     // get metadata filename
+    std::cout << "10:   fLI ← DHT.get(uname)" << std::endl;
     char metadataFileName[FILE_NAME_LEN];
     memset(metadataFileName, '\0', FILE_NAME_LEN);
     unsigned int filenameLen = FILE_NAME_LEN;
     storage->readFile(username, metadataFileName, filenameLen);
+    std::cout << "read metadataFileName from DHT:" << metadataFileName << std::endl;
+
 
     unsigned int salt = 0;
     char filenameKS[FKS_ENCRYPTED_DATA_LEN];
