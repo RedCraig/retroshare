@@ -39,7 +39,7 @@
 #define BITDHT_QUERY_NEIGHBOUR_PEERS    8
 #define BITDHT_MAX_REMOTE_QUERY_AGE	10
 
-#define DEBUG_NODE_MSGS 1
+// #define DEBUG_NODE_MSGS 1
 /****
  * #define DEBUG_NODE_MULTIPEER 1
  * #define DEBUG_NODE_MSGS 1
@@ -89,7 +89,7 @@ void bdQueryManager::printQueries()
 
 int bdQueryManager::iterateQueries(int maxQueries)
 {
-#ifdef DEBUG_NODE_MULTIPEER 
+#ifdef DEBUG_NODE_MULTIPEER
 	std::cerr << "bdQueryManager::iterateQueries() of Peer: ";
 	mFns->bdPrintNodeId(std::cerr, &mOwnId);
 	std::cerr << std::endl;
@@ -99,10 +99,10 @@ int bdQueryManager::iterateQueries(int maxQueries)
 	int numQueries = mLocalQueries.size();
 	int sentQueries = 0;
 	int i = 0;
-	
+
 	bdId id;
 	bdNodeId targetNodeId;
-	
+
 	while((i < numQueries) && (sentQueries < maxQueries))
 	{
 		bdQuery *query = mLocalQueries.front();
@@ -112,7 +112,7 @@ int bdQueryManager::iterateQueries(int maxQueries)
 		/* go through the possible queries */
 		if (query->nextQuery(id, targetNodeId))
 		{
-#ifdef DEBUG_NODE_MSGS 
+#ifdef DEBUG_NODE_MSGS
 			std::cerr << "bdQueryManager::iteration() send_query(";
 			mFns->bdPrintId(std::cerr, &id);
 			std::cerr << ",";
@@ -125,8 +125,8 @@ int bdQueryManager::iterateQueries(int maxQueries)
 		}
 		i++;
 	}
-	
-#ifdef DEBUG_NODE_ACTIONS 
+
+#ifdef DEBUG_NODE_ACTIONS
 	std::cerr << "bdQueryManager::iteration() maxMsgs: " << maxMsgs << " sentPings: " << sentPings;
 	std::cerr << " / " << allowedPings;
 	std::cerr << " sentQueries: " << sentQueries;
@@ -165,7 +165,7 @@ bool bdQueryManager::checkPotentialPeer(bdId *id, bdId *src)
 void bdQueryManager::addPeer(const bdId *id, uint32_t peerflags)
 {
 
-#ifdef DEBUG_NODE_ACTIONS 
+#ifdef DEBUG_NODE_ACTIONS
 	fprintf(stderr, "bdQueryManager::addPeer(");
 	mFns->bdPrintId(std::cerr, id);
 	fprintf(stderr, ")\n");
@@ -190,7 +190,7 @@ void bdQueryManager::addQuery(const bdNodeId *id, uint32_t qflags)
 
 	mNodeSpace->find_nearest_nodes(id, BITDHT_QUERY_START_PEERS, nearest);
 
-#ifdef DEBUG_NODE_ACTIONS 
+#ifdef DEBUG_NODE_ACTIONS
 	fprintf(stderr, "bdQueryManager::addQuery(");
 	mFns->bdPrintNodeId(std::cerr, id);
 	fprintf(stderr, ")\n");
@@ -270,7 +270,7 @@ int bdQueryManager::QuerySummary(const bdNodeId *id, bdQuerySummary &query)
 
 int  bdQueryManager::getResults(bdNodeId *target, std::list<bdId> &answer, int querytype)
 {
-		
+
 	/* grab any peers from any existing query */
 	int results = 0;
 	std::list<bdQuery *>::iterator qit;
@@ -280,7 +280,7 @@ int  bdQueryManager::getResults(bdNodeId *target, std::list<bdId> &answer, int q
 		{
 			continue;
 		}
-		
+
 #ifdef DEBUG_NODE_CONNECTION
 		std::cerr << "bdQueryManager::getResults() Found Matching Query";
 		std::cerr << std::endl;
@@ -304,17 +304,17 @@ int  bdQueryManager::getResults(bdNodeId *target, std::list<bdId> &answer, int q
 	return 0;
 }
 
-		
+
 int  bdQueryManager::result(bdNodeId *target, std::list<bdId> &answer)
 {
 	return getResults(target, answer,  BDQRYMGR_RESULTS);
 }
-		
+
 int  bdQueryManager::proxies(bdNodeId *target, std::list<bdId> &answer)
 {
 	return getResults(target, answer,  BDQRYMGR_PROXIES);
 }
-		
+
 int  bdQueryManager::potentialProxies(bdNodeId *target, std::list<bdId> &answer)
 {
 	return getResults(target, answer,  BDQRYMGR_POTPROXIES);
@@ -333,7 +333,7 @@ void bdQueryManager::addWorthyPeerSource(bdId *src)
 	peer.mPeerId = *src;
 	peer.mFoundTime = now;
 
-#ifdef DEBUG_NODE_ACTIONS 
+#ifdef DEBUG_NODE_ACTIONS
 	std::cerr << "bdQueryManager::addWorthyPeerSource(";
 	mFns->bdPrintId(std::cerr, src);
 	std::cerr << ")" << std::endl;
@@ -353,7 +353,7 @@ bool bdQueryManager::checkWorthyPeerSources(bdId *src)
 	{
 		if (now - it->mFoundTime > MAX_WORTHY_PEER_AGE)
 		{
-#ifdef DEBUG_NODE_ACTIONS 
+#ifdef DEBUG_NODE_ACTIONS
 			std::cerr << "bdQueryManager::checkWorthyPeerSource() Discard old Source: ";
 			mFns->bdPrintId(std::cerr, &(it->mPeerId));
 			std::cerr << std::endl;
@@ -365,7 +365,7 @@ bool bdQueryManager::checkWorthyPeerSources(bdId *src)
 		{
 			if (it->mPeerId == *src)
 			{
-#ifdef DEBUG_NODE_ACTIONS 
+#ifdef DEBUG_NODE_ACTIONS
 				std::cerr << "bdQueryManager::checkWorthyPeerSource(";
 				mFns->bdPrintId(std::cerr, src);
 				std::cerr << ") = true" << std::endl;
