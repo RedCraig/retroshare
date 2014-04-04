@@ -46,6 +46,7 @@ bdHashSet::bdHashSet(bdNodeId *id)
 
 int 	bdHashSet::search(std::string key, uint32_t maxAge, std::list<bdHashEntry> &entries)
 {
+	printHashSet(std::cerr);
 	std::multimap<std::string, bdHashEntry>::iterator sit, eit, it;
         sit = mEntries.lower_bound(key);
         eit = mEntries.upper_bound(key);
