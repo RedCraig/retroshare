@@ -182,6 +182,14 @@ DHT:
     - [Done] where is it called from on msg reply? do I need to fix it for post_hash?
 
 
+
+bdmsgs.cc
+- check that Storage.cc:47 std::string value(data); works ok,
+  what length does value after init? Did it stop at a null terminator?
+- bitdht_posthash_msg needs to take a char* array instead of a 'std::string hash'
+- ramifications for return data?
+
+
 - implement a write once policy inthe bdHashSpace
   so that FLI and other files cannot be overwritten. The write
   once policy does not require a secret.
@@ -209,7 +217,7 @@ Commands:
 ./udpbitdht_msgtest -b localboot_find3074.txt -p3074 -ub8033e8acab57e170b612372727b38a60f28b76e -tb8033e8acab57e170b612372727b38a60f28b76e
 
 // second dht which finds first
--p 3099 -b localboot_find3074.txt -t6238303333653861636162353765313730623631
+./udpbitdht_msgtest -b localboot_find3074.txt -p 3099 -b localboot_find3074.txt -t6238303333653861636162353765313730623631
 
 
 -------------------------------------------------------------------------------
@@ -295,5 +303,9 @@ paper notes:
 - how the poster of the has is responsible for posting the hash, and keeping it alive on other nodes (i.e. poster is responsible for replication amongst other nodes)
 - current messaging protocol based on known string lengths for every message types
   - doesn't work for username lookup in DHT to get fli, unless we hash the username to a known length
-
+- http://en.wikipedia.org/wiki/Base64
+  OpenPGP[edit]
+  Main article: OpenPGP
+  OpenPGP, described in RFC 4880, describes Radix-64 encoding, also known as "ASCII Armor". Radix-64 is identical to the "Base64" encoding described from MIME, with the addition of an optional 24-bit CRC. The checksum is calculated on the input data before encoding; the checksum is then encoded with the same Base64 algorithm and, using an additional "=" symbol as separator, appended to the encoded output data.[11]
+- bitdht's hashtable is separated by hash of the nodeid i.e. one node can't lookup another nodes data
 
