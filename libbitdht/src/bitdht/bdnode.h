@@ -221,8 +221,9 @@ void	recvPkt(char *msg, int len, struct sockaddr_in addr);
 	void msgin_post_hash(bdId *id,
 	                     bdToken *transId,
 	                     char *key,
-	                     char *hash,
-	                     char *secret);
+	                     char *value,
+                         unsigned int valueLen,
+                         char *secret);
 
 	void msgout_reply_post_hash(bdId *id, bdToken *transId, bool successful);
 	void msgin_reply_post_hash(bdId *id, bdToken *transId, bool successful);
