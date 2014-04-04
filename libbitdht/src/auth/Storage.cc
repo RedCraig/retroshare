@@ -29,8 +29,8 @@ bool Storage::writeFKSFile(char* data, int dataLen, char* filename,
                            unsigned int &filenameLen)
 {
     // storage engine determines filename
-    filenameLen = 24;
-    memcpy(filename, "dht_filename_for_FKS.txt", filenameLen);
+    filenameLen = 20;
+    memcpy(filename, "dht_FKS_filename1234", filenameLen);
     filename[filenameLen] = '\0';
     return writeFile(data, dataLen, filename);
 }
@@ -42,8 +42,12 @@ bool Storage::writeFile(char* data, int dataLen, char* filename)
         bdNodeId key;
         memcpy(key.data, filename, BITDHT_KEY_LEN);
 
-        std::string value;
-        memcpy(value.data, data, dataLen);
+        std::string value(data, dataLen);
+        // string::string(const char *szCString, size_type unLength)
+
+        // memcpy attempt
+        // std::string value;
+        // memcpy(value.data, data, dataLen);
 
         // no secret for now, blank string
         std::string secret;
@@ -66,8 +70,8 @@ bool Storage::writeMetadataFile(char* metadataBuf, const unsigned int metadataLe
                                 char* const filename, unsigned int &filenameLen)
 {
     // storage engine determines filename
-    filenameLen = 13;
-    memcpy(filename, "auth_metadata", filenameLen);
+    filenameLen = 20;
+    memcpy(filename, "auth_metadata1234567", filenameLen);
     filename[filenameLen] = '\0';
     return writeFile(metadataBuf, metadataLen, filename);
 }
